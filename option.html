@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Twitcher option</title>
+
+    <link rel="stylesheet" href="styles/option.css">
+
+    <script src="scripts/jquery.js"></script>
+    <script src="scripts/constants.js"></script>
+    <script src="scripts/option.js"></script>
+    <script src="scripts/storage.js"></script>
+</head>
+<body>
+
+<form method="post" class="option-form">
+    <div class="item">
+        <button type="button" id="login-btn">Login</button>
+    </div>
+    <div class="item">
+        <label for="follower-login-id">Follower ID</label>
+        <input type="text" placeholder="your twitch login ID. ex) 'usera2tt'"
+               id="follower-login-id" name="follower-login-id" autocomplete="off">
+    </div>
+    <div class="item">
+        <button type="submit" class="save-btn">save</button>
+    </div>
+    <div class="item">
+        <div id="message"></div>
+    </div>
+</form>
+
+</body>
+</html>

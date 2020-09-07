@@ -1,0 +1,49 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+a {
+    text-decoration: none;
+    color: #000;
+}
+
+input {
+    padding: 6px 10px;
+    border-radius: 4px;
+}
+input::placeholder {
+    color: #777;
+}
+
+.option-form {
+    padding: 20px 4px;
+}
+
+.option-form .item {
+    margin: 10px;
+}
+
+.option-form .item label {
+    font-weight: 700;
+    width: 100%;
+    display: block;
+    size: 0.6em;
+    margin-bottom: 2px;
+}
+
+.option-form .item input {
+    width: 100%;
+    display: block;
+    size: 1em;
+}
+
+.option-form .item .save-btn {
+    padding: 2px 14px;
+    border-radius: 3px;
+}
+
+#login-btn {
+    display: none;
+}

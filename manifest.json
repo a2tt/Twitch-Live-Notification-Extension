@@ -1,0 +1,35 @@
+{
+  "manifest_version": 2,
+  "name": "Twitcher",
+  "version": "0.0.1",
+  "description": "List streamers on live broadcast I following.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "contextMenus",
+    "tabs",
+    "activeTab"
+  ],
+  "browser_action": {
+    "default_icon": "/images/1.png",
+    "default_popup": "popup.html"
+  },
+  "options_page": "option.html",
+  "background": {
+    "scripts": [
+      "/scripts/background.js",
+      "/scripts/storage.js",
+      "/scripts/constants.js"
+    ],
+    "persistent": false
+  },
+  "icons": {
+    "16": "/images/1.png",
+    "48": "/images/1.png",
+    "128": "/images/1.png"
+  },
+  "web_accessible_resources": [
+    "images/*.png",
+    "option.html"
+  ]
+}
