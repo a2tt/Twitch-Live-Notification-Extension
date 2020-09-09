@@ -1,7 +1,11 @@
 window.onload = function () {
+    // background script `window`
+    let bgPage = chrome.extension.getBackgroundPage();
+
     let followerIdInput = window.document.getElementById('follower-login-id');
     let messageDiv = window.document.getElementById('message');
     let loginBtn = window.document.getElementById('login-btn')
+    let logoutBtn = window.document.getElementById('logout-btn')
 
     storageGet([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN], storage => {
         console.log(storage[KEY_FOLLOWER_LOGIN_ID])
@@ -10,8 +14,10 @@ window.onload = function () {
         if (storage[KEY_FOLLOWER_LOGIN_ID]) {
             followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
         }
-        if (!storage[KEY_TWITCH_TOKEN]) {
-            loginBtn.style.display = 'block'
+        if (storage[KEY_TWITCH_TOKEN]) {
+            logoutBtn.style.display = 'block';
+        } else {
+            loginBtn.style.display = 'block';
         }
     })
 
@@ -26,16 +32,33 @@ window.onload = function () {
             storageSetPromise({
                 [KEY_TWITCH_TOKEN]: access_token
             }).then(res => {
-                window.location.href = chrome.extension.getURL('option.html');
+                // 로그인 한 유저의 정보로 데이터 초기 세팅
+                bgPage.getUserInfo().then(res => {
+                    storageSetPromise({
+                        [KEY_FOLLOWER_ID]: res.data[0].id,
+                        [KEY_FOLLOWER_LOGIN_ID]:res.data[0].login,
+                    }).then(res => {
+                        window.location.href = chrome.extension.getURL('option.html');
+                    })
+                })
             })
         }
     }
 
     // login button binding
-    document.getElementById('login-btn').addEventListener('click', function (e) {
+    loginBtn.addEventListener('click', e => {
         let redirectUri = chrome.extension.getURL('option.html');
         this.loginUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${TWITCH_CLIENT_ID}&redirect_uri=${redirectUri}&scope=openid+user:read:email`
         window.location.href = this.loginUrl;
+    })
+
+    // logout button binding
+    logoutBtn.addEventListener('click', e => {
+        storageSetPromise({
+            [KEY_TWITCH_TOKEN]: null,
+            [KEY_FOLLOWER_ID]: null,
+            [KEY_FOLLOWER_LOGIN_ID]: null,
+        }).then(res => window.location.reload())
     })
 
     // form submit binding
@@ -49,7 +72,6 @@ window.onload = function () {
         }
 
         // Get user id using login id and save it
-        let bgPage = chrome.extension.getBackgroundPage();
         bgPage.getUserInfo(followerLoginId).then(res => {
             console.log(res)
             storageSetPromise({

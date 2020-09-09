@@ -19,13 +19,14 @@ input::placeholder {
 
 .option-form {
     padding: 20px 4px;
+    max-width: 500px;
 }
 
-.option-form .item {
+.option-form .game-group {
     margin: 10px;
 }
 
-.option-form .item label {
+.option-form .game-group label {
     font-weight: 700;
     width: 100%;
     display: block;
@@ -33,17 +34,17 @@ input::placeholder {
     margin-bottom: 2px;
 }
 
-.option-form .item input {
+.option-form .game-group input {
     width: 100%;
     display: block;
     size: 1em;
 }
 
-.option-form .item .save-btn {
+.option-form .game-group .save-btn {
     padding: 2px 14px;
     border-radius: 3px;
 }
 
-#login-btn {
+#login-btn, #logout-btn {
     display: none;
 }

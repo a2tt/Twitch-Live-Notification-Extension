@@ -1,0 +1,42 @@
+* {
+    padding: 0;
+    margin: 0;
+}
+
+h1 {
+    padding: 0 10px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+#container {
+    width: 300px;
+    user-select: none;
+    padding: 3px;
+}
+
+div.game-group {
+    padding: 3px;
+}
+
+p.game-name {
+    border-bottom: 1px solid #c5c5c5;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    padding-bottom: 3px;
+    font-weight: 500;
+}
+
+div.stream-wrapper {
+    padding: 3px 6px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+div.stream-wrapper:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}

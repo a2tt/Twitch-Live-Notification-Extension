@@ -1,7 +1,14 @@
+/**
+ * @param callback
+ */
 function storageClear(callback = null) {
-    chrome.storage.clear(callback)
+    chrome.storage.local.clear(callback)
 }
 
+/**
+ * @param {Array} key
+ * @returns {Promise<unknown>}
+ */
 function storageGetPromise(key) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.get(key, (res) => {
@@ -10,6 +17,10 @@ function storageGetPromise(key) {
     });
 }
 
+/**
+ * @param {Object} obj
+ * @returns {Promise<unknown>}
+ */
 function storageSetPromise(obj) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.set(obj, () => {

@@ -3,13 +3,21 @@
  * convert 'id'(int) to 'login id'(str)
  *
  * @param userId
+ * @param by
  * @returns {Promise<unknown>}
  */
-function getUserInfo(userId) {
+function getUserInfo(userId = null, by = 'login') {
     return storageGetPromise([KEY_TWITCH_TOKEN]).then(storage => {
-        return fetch(`https://api.twitch.tv/helix/users?` + new URLSearchParams({
-            login: userId,
-        }), {
+        let qs = new URLSearchParams()
+        if (Array.isArray(userId)) {
+            userId.forEach(id => {
+                qs.append(by, id)
+            })
+        } else if (userId) {
+            qs.append(by, userId);
+        }
+        let url = `https://api.twitch.tv/helix/users?` + qs
+        return fetch(url, {
             method: 'GET',
             headers: {
                 "Client-ID": TWITCH_CLIENT_ID,
@@ -61,25 +69,75 @@ function getActiveStream(userIds, twitchToken) {
 }
 
 /**
+ * game id to game name
+ * @param gameIds
+ * @param twitchToken
+ */
+function getGameName(gameIds, twitchToken) {
+    let params = new URLSearchParams()
+    gameIds.forEach(gameId => params.append('id', gameId))
+    return fetch('https://api.twitch.tv/helix/games?' + params, {
+        method: 'GET',
+        headers: {
+            "Client-ID": TWITCH_CLIENT_ID,
+            "Authorization": `Bearer ${twitchToken}`,
+        },
+    }).then(res => res.json());
+}
+
+/**
  * Periodically check streams
  */
 function updateLiveStream() {
     storageGetPromise([KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN]).then(storage => {
         if (storage[KEY_FOLLOWER_ID]) {
+            // get following list
             getFollower(storage[KEY_FOLLOWER_ID], storage[KEY_TWITCH_TOKEN]
             ).then(res1 => {
                 let userIds = []
                 res1.data.forEach(info => userIds.push(info.to_id))
-                getActiveStream(userIds, storage[KEY_TWITCH_TOKEN]
-                ).then(res2 => {
-                    let foo = []
-                    res2.data.forEach(data => {
-                        console.log(data)
-                        foo.push(data);
-                    });
-
-                    chrome.browserAction.setBadgeBackgroundColor({color: [119, 44, 232, 255]});
-                    chrome.browserAction.setBadgeText({"text": String(foo.length)});
+                // need followee name not id
+                getUserInfo(userIds, 'id').then(resUserInfo => {
+                    let userNameMap = {}
+                    resUserInfo.data.forEach(data => userNameMap[data.id] = data.login)
+                    // get active stream in following list
+                    getActiveStream(userIds, storage[KEY_TWITCH_TOKEN]
+                    ).then(res2 => {
+                        let gameIds = []
+                        res2.data.forEach(data => {
+                            gameIds.push(data.game_id)
+                        })
+                        // convert `game_id` to `game_name`
+                        getGameName(gameIds, storage[KEY_TWITCH_TOKEN]
+                        ).then(res3 => {
+                            console.log(res3)
+                            let gameNameMap = {}
+                            res3.data.forEach(data => gameNameMap[data.id] = data.name)
+                            // insert game_name to stream data
+                            let liveStreams = []
+                            res2.data.forEach(data => {
+                                data.game_name = gameNameMap.hasOwnProperty(data.game_id) ? gameNameMap[data.game_id] : ''
+                                liveStreams.push({
+                                    user_name: data.user_name,
+                                    user_login: userNameMap[data.user_id],
+                                    user_id: data.user_id,
+                                    game_name: data.game_name,
+                                    title: data.title,
+                                    type: data.type,
+                                    viewer_count: data.viewer_count,
+                                });
+                                console.log(data)
+                            });
+                            // save on storage
+                            storageSetPromise({
+                                [KEY_LIVE_STREAM]: liveStreams,
+                                'ts': new Date().toString(),
+                            }).then(res => {
+                                chrome.browserAction.setBadgeBackgroundColor({color: [119, 44, 232, 255]});
+                                chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
+                            })
+                        })
+                    })
                 })
             })
         }
