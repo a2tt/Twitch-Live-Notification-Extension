@@ -1,8 +1,16 @@
 /**
- * @param callback
+ * clear credentials
+ *
+ * @returns {Promise<unknown>}
  */
-function storageClear(callback = null) {
-    chrome.storage.local.clear(callback)
+function storageClearCredential() {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.set({
+            [KEY_TWITCH_TOKEN]: null,
+        }, () => {
+            resolve();
+        })
+    })
 }
 
 /**

@@ -1,3 +1,21 @@
+function request(url, qs = '', twitchToken = '', method = 'GET') {
+    url = qs ? `${url}?${qs}` : url
+    return fetch(url, {
+        method,
+        headers: {
+            "Client-ID": TWITCH_CLIENT_ID,
+            "Authorization": `Bearer ${twitchToken}`,
+        },
+    }).then(res => {
+        if (res.status === 401) {
+            storageClearCredential();
+        }
+        return res.json();
+    }).catch(e => {
+        console.error(e)
+    });
+}
+
 /**
  * Get user info by user id(integer).
  * convert 'id'(int) to 'login id'(str)
@@ -8,20 +26,14 @@
  */
 function getUserInfo(userId = null, by = 'login') {
     return storageGetPromise([KEY_TWITCH_TOKEN]).then(storage => {
+        let url = 'https://api.twitch.tv/helix/users';
         let qs = new URLSearchParams()
         if (Array.isArray(userId)) {
             userId.forEach(id => qs.append(by, id))
         } else if (userId) {
             qs.append(by, userId);
         }
-        let url = `https://api.twitch.tv/helix/users?` + qs
-        return fetch(url, {
-            method: 'GET',
-            headers: {
-                "Client-ID": TWITCH_CLIENT_ID,
-                "Authorization": `Bearer ${storage[KEY_TWITCH_TOKEN]}`,
-            },
-        }).then(res => res.json());
+        return request(url, qs, storage[KEY_TWITCH_TOKEN]);
     });
 }
 
@@ -33,16 +45,12 @@ function getUserInfo(userId = null, by = 'login') {
  * @returns {Promise<Object>}
  */
 function getFollower(followerId, twitchToken) {
-    return fetch(`https://api.twitch.tv/helix/users/follows?` + new URLSearchParams({
+    let url = 'https://api.twitch.tv/helix/users/follows'
+    let qs = new URLSearchParams({
         from_id: followerId,
         first: 100,
-    }), {
-        method: 'GET',
-        headers: {
-            "Client-ID": TWITCH_CLIENT_ID,
-            "Authorization": `Bearer ${twitchToken}`,
-        },
-    }).then(res => res.json());
+    })
+    return request(url, qs, twitchToken);
 }
 
 /**
@@ -53,18 +61,12 @@ function getFollower(followerId, twitchToken) {
  * @returns {Promise<Object>}
  */
 function getActiveStream(userIds, twitchToken) {
-    let params = new URLSearchParams({
+    let url = 'https://api.twitch.tv/helix/streams'
+    let qs = new URLSearchParams({
         first: 100,
     });
-    userIds.forEach(userId => params.append('user_id', userId));
-
-    return fetch('https://api.twitch.tv/helix/streams?' + params, {
-        method: 'GET',
-        headers: {
-            "Client-ID": TWITCH_CLIENT_ID,
-            "Authorization": `Bearer ${twitchToken}`,
-        },
-    }).then(res => res.json());
+    userIds.forEach(userId => qs.append('user_id', userId));
+    return request(url, qs, twitchToken);
 }
 
 /**
@@ -74,15 +76,10 @@ function getActiveStream(userIds, twitchToken) {
  * @returns {Promise<Object>}
  */
 function getGameName(gameIds, twitchToken) {
-    let params = new URLSearchParams();
-    gameIds.forEach(gameId => params.append('id', gameId));
-    return fetch('https://api.twitch.tv/helix/games?' + params, {
-        method: 'GET',
-        headers: {
-            "Client-ID": TWITCH_CLIENT_ID,
-            "Authorization": `Bearer ${twitchToken}`,
-        },
-    }).then(res => res.json());
+    let url = 'https://api.twitch.tv/helix/games'
+    let qs = new URLSearchParams();
+    gameIds.forEach(gameId => qs.append('id', gameId));
+    return request(url, qs, twitchToken);
 }
 
 /**
