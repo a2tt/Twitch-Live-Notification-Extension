@@ -44,6 +44,18 @@ body {
     padding: 3px;
 }
 
+body::-webkit-scrollbar {
+    width: 0.4em;
+}
+
+body::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+body::-webkit-scrollbar-thumb {
+    background-color: #656565;
+}
+
 #header {
     padding: 0 6px;
     text-align: right;
@@ -88,13 +100,13 @@ p.game-name {
 
 div.stream-wrapper {
     cursor: pointer;
-    margin: 0 4px;
-    padding: 3px 4px;
+    margin-left: 4px;
+    padding: 3px 8px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 div.stream-wrapper:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(95, 95, 95, 0.1);
 }
 
 #footer {

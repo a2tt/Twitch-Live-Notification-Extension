@@ -7,7 +7,7 @@ function onClickRefreshBtn(e) {
 
         let beforeTs = res[KEY_UPDATE_TS];
         clearInterval(updateCheckInterval);
-        e.target.classList.add('spinning')
+        e.target.classList.add('spinning');
         // check refreshing
         updateCheckInterval = setInterval(_ => {
             storageGetPromise([KEY_UPDATE_TS]).then(res => {
@@ -15,7 +15,7 @@ function onClickRefreshBtn(e) {
                 if (beforeTs !== res[KEY_UPDATE_TS]) {
                     clearInterval(updateCheckInterval);
                     createUI();
-                    e.target.classList.remove('spinning')
+                    e.target.classList.remove('spinning');
                 }
             })
         }, 500)
@@ -33,57 +33,67 @@ function createUI() {
 </div>
     */
     let container = document.getElementById('container');
-    container.innerHTML = ''
+    container.innerHTML = '';
     storageGetPromise([KEY_LIVE_STREAM]).then(res => {
         // group by game name
-        let gameGroup = {}
+        let gameGroup = {};
         for (let s of res[KEY_LIVE_STREAM]) {
             if (!gameGroup.hasOwnProperty(s.game_name))
-                gameGroup[s.game_name] = []
-            gameGroup[s.game_name].push(s)
+                gameGroup[s.game_name] = [];
+            gameGroup[s.game_name].push(s);
         }
 
         for (let gameName in gameGroup) {
             // create UI element
-            let gameGroupElem = document.createElement('div')
-            gameGroupElem.className = 'game-group'
-            let gameNameElem = document.createElement('p')
-            gameNameElem.className = 'game-name single-line'
-            gameNameElem.innerText = gameName
-            gameNameElem.setAttribute('data-href', 'https://twitch.tv/directory/game/' + encodeURIComponent(gameName))
+            let gameGroupElem = document.createElement('div');
+            gameGroupElem.className = 'game-group';
+            let gameNameElem = document.createElement('p');
+            gameNameElem.className = 'game-name single-line';
+            gameNameElem.innerText = gameName;
+            gameNameElem.setAttribute('data-href', 'https://twitch.tv/directory/game/' + encodeURIComponent(gameName));
             gameNameElem.onclick = function () {
                 chrome.tabs.create({url: this.getAttribute('data-href')});
                 return false;
             }
-            gameGroupElem.appendChild(gameNameElem)
+            gameGroupElem.appendChild(gameNameElem);
             for (let stream of gameGroup[gameName]) {
-                let streamElem = document.createElement('div')
-                streamElem.className = 'stream-wrapper single-line'
-                streamElem.setAttribute('data-href', `https://twitch.tv/${stream.user_login}`)
-                streamElem.innerText = `${stream.user_name} (${stream.user_login})`
+                let streamElem = document.createElement('div');
+                streamElem.className = 'stream-wrapper single-line';
+                streamElem.setAttribute('data-href', `https://twitch.tv/${stream.user_login}`);
+                streamElem.innerText = `${stream.user_name} (${stream.user_login})`;
                 streamElem.onclick = function () {
                     chrome.tabs.create({url: this.getAttribute('data-href')});
                     return false;
                 }
-                gameGroupElem.appendChild(streamElem)
+                gameGroupElem.appendChild(streamElem);
             }
-            container.appendChild(gameGroupElem)
+            container.appendChild(gameGroupElem);
         }
+        // refresh updated at
+        updateTs();
     })
 
 }
 
 function timeDiff(prevTs) {
-    let prev = new Date(prevTs)
-    let diff_ms = (new Date()) - prev
-    return parseInt(diff_ms / 1000 / 60)
+    let prev = new Date(prevTs);
+    let diff_ms = (new Date()) - prev;
+    return parseInt(diff_ms / 1000 / 60);
+}
+
+function updateTs() {
+    let updatedAt = document.getElementById('updated-at');
+    storageGet([KEY_UPDATE_TS], storage => {
+        updatedAt.innerText = `🕗${timeDiff(storage[KEY_UPDATE_TS])}min ago`;
+    })
+
 }
 
 window.onload = function () {
     createUI();
+    document.getElementById('refresh-btn').addEventListener('click', onClickRefreshBtn);
 
-    document.getElementById('refresh-btn').addEventListener('click', onClickRefreshBtn)
-    storageGet([KEY_UPDATE_TS], storage => {
-        document.getElementById('updated-at').innerText = `🕗${timeDiff(storage.ts)}min ago`
-    })
+    setInterval(_ => {
+        updateTs();
+    }, 20000)
 }

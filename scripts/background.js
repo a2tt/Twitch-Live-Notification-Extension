@@ -4,15 +4,13 @@
  *
  * @param userId
  * @param by
- * @returns {Promise<unknown>}
+ * @returns {Promise<Object>}
  */
 function getUserInfo(userId = null, by = 'login') {
     return storageGetPromise([KEY_TWITCH_TOKEN]).then(storage => {
         let qs = new URLSearchParams()
         if (Array.isArray(userId)) {
-            userId.forEach(id => {
-                qs.append(by, id)
-            })
+            userId.forEach(id => qs.append(by, id))
         } else if (userId) {
             qs.append(by, userId);
         }
@@ -32,7 +30,7 @@ function getUserInfo(userId = null, by = 'login') {
  *
  * @param followerId
  * @param twitchToken
- * @returns {Promise<void>}
+ * @returns {Promise<Object>}
  */
 function getFollower(followerId, twitchToken) {
     return fetch(`https://api.twitch.tv/helix/users/follows?` + new URLSearchParams({
@@ -44,7 +42,7 @@ function getFollower(followerId, twitchToken) {
             "Client-ID": TWITCH_CLIENT_ID,
             "Authorization": `Bearer ${twitchToken}`,
         },
-    }).then(res => res.json())
+    }).then(res => res.json());
 }
 
 /**
@@ -52,11 +50,12 @@ function getFollower(followerId, twitchToken) {
  *
  * @param userIds
  * @param twitchToken
+ * @returns {Promise<Object>}
  */
 function getActiveStream(userIds, twitchToken) {
     let params = new URLSearchParams({
         first: 100,
-    })
+    });
     userIds.forEach(userId => params.append('user_id', userId));
 
     return fetch('https://api.twitch.tv/helix/streams?' + params, {
@@ -72,10 +71,11 @@ function getActiveStream(userIds, twitchToken) {
  * game id to game name
  * @param gameIds
  * @param twitchToken
+ * @returns {Promise<Object>}
  */
 function getGameName(gameIds, twitchToken) {
-    let params = new URLSearchParams()
-    gameIds.forEach(gameId => params.append('id', gameId))
+    let params = new URLSearchParams();
+    gameIds.forEach(gameId => params.append('id', gameId));
     return fetch('https://api.twitch.tv/helix/games?' + params, {
         method: 'GET',
         headers: {
@@ -94,27 +94,24 @@ function updateLiveStream() {
             // get following list
             getFollower(storage[KEY_FOLLOWER_ID], storage[KEY_TWITCH_TOKEN]
             ).then(res1 => {
-                let userIds = []
-                res1.data.forEach(info => userIds.push(info.to_id))
+                let userIds = [];
+                res1.data.forEach(info => userIds.push(info.to_id));
                 // need followee name not id
                 getUserInfo(userIds, 'id').then(resUserInfo => {
-                    let userNameMap = {}
-                    resUserInfo.data.forEach(data => userNameMap[data.id] = data.login)
+                    let userNameMap = {};
+                    resUserInfo.data.forEach(data => userNameMap[data.id] = data.login);
                     // get active stream in following list
                     getActiveStream(userIds, storage[KEY_TWITCH_TOKEN]
                     ).then(res2 => {
-                        let gameIds = []
-                        res2.data.forEach(data => {
-                            gameIds.push(data.game_id)
-                        })
+                        let gameIds = [];
+                        res2.data.forEach(data => gameIds.push(data.game_id));
                         // convert `game_id` to `game_name`
                         getGameName(gameIds, storage[KEY_TWITCH_TOKEN]
                         ).then(res3 => {
-                            console.log(res3)
-                            let gameNameMap = {}
-                            res3.data.forEach(data => gameNameMap[data.id] = data.name)
+                            let gameNameMap = {};
+                            res3.data.forEach(data => gameNameMap[data.id] = data.name);
                             // insert game_name to stream data
-                            let liveStreams = []
+                            let liveStreams = [];
                             res2.data.forEach(data => {
                                 data.game_name = gameNameMap.hasOwnProperty(data.game_id) ? gameNameMap[data.game_id] : ''
                                 liveStreams.push({
@@ -126,7 +123,6 @@ function updateLiveStream() {
                                     type: data.type,
                                     viewer_count: data.viewer_count,
                                 });
-                                console.log(data)
                             });
                             // save on storage
                             storageSetPromise({
@@ -157,11 +153,9 @@ function eventHandler(data) {
 window.onload = function () {
     chrome.alarms.create(EVENT_UPDATE_LIVE_STREAM, {
         when: 1000, // Initial execution after 1 second
-        // periodInMinutes: 10, // every 10 minutes
-        periodInMinutes: 3, // FIXME delete
-        // periodInMinutes: 1, // FIXME delete
+        periodInMinutes: 3, // every n minutes
     })
 
-    chrome.alarms.onAlarm.addListener(eventHandler)
-    chrome.runtime.onMessage.addListener(eventHandler)
+    chrome.alarms.onAlarm.addListener(eventHandler);
+    chrome.runtime.onMessage.addListener(eventHandler);
 }
