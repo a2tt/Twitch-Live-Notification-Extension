@@ -98,7 +98,9 @@ function eventHandler(data) {
 
 window.onload = function () {
     createUI();
-    document.getElementById('refresh-btn').addEventListener('click', onClickRefreshBtn);
+    let refreshBtn = document.getElementById('refresh-btn');
+    refreshBtn.addEventListener('click', onClickRefreshBtn);
+    refreshBtn.click();
 
     setInterval(_ => {
         updateTs();
