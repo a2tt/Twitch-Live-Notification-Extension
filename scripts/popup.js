@@ -1,17 +1,39 @@
+var updateCheckInterval = null
+
 function onClickRefreshBtn(e) {
-    chrome.runtime.sendMessage({'type': 'updateLiveStream'})
+    storageGetPromise([KEY_UPDATE_TS]).then(res => {
+        // send update request
+        chrome.runtime.sendMessage({'name': 'updateLiveStream'});
+
+        let beforeTs = res[KEY_UPDATE_TS];
+        clearInterval(updateCheckInterval);
+        e.target.classList.add('spinning')
+        // check refreshing
+        updateCheckInterval = setInterval(_ => {
+            storageGetPromise([KEY_UPDATE_TS]).then(res => {
+                // if refreshed
+                if (beforeTs !== res[KEY_UPDATE_TS]) {
+                    clearInterval(updateCheckInterval);
+                    createUI();
+                    e.target.classList.remove('spinning')
+                }
+            })
+        }, 500)
+    })
+
 }
 
 function createUI() {
-    /*
+    /* sample
 <div class="game-group">
-    <p class="game-name"
+    <p class="game-name single-line"
        data-href="https://twitch.tv/directory/game/Dead%20by%20Daylight">Leagues of Legends</p>
-    <div class="stream-wrapper" data-href="">김도 (kimdoe)</div>
-    <div class="stream-wrapper" data-href="">승우아빠_ (swab85)</div>
+    <div class="stream-wrapper single-line" data-href="">김도 (kimdoe)</div>
+    <div class="stream-wrapper single-line" data-href="">승우아빠_ (swab85)</div>
 </div>
     */
     let container = document.getElementById('container');
+    container.innerHTML = ''
     storageGetPromise([KEY_LIVE_STREAM]).then(res => {
         // group by game name
         let gameGroup = {}
@@ -26,7 +48,7 @@ function createUI() {
             let gameGroupElem = document.createElement('div')
             gameGroupElem.className = 'game-group'
             let gameNameElem = document.createElement('p')
-            gameNameElem.className = 'game-name'
+            gameNameElem.className = 'game-name single-line'
             gameNameElem.innerText = gameName
             gameNameElem.setAttribute('data-href', 'https://twitch.tv/directory/game/' + encodeURIComponent(gameName))
             gameNameElem.onclick = function () {
@@ -36,7 +58,7 @@ function createUI() {
             gameGroupElem.appendChild(gameNameElem)
             for (let stream of gameGroup[gameName]) {
                 let streamElem = document.createElement('div')
-                streamElem.className = 'stream-wrapper'
+                streamElem.className = 'stream-wrapper single-line'
                 streamElem.setAttribute('data-href', `https://twitch.tv/${stream.user_login}`)
                 streamElem.innerText = `${stream.user_name} (${stream.user_login})`
                 streamElem.onclick = function () {
@@ -51,11 +73,17 @@ function createUI() {
 
 }
 
+function timeDiff(prevTs) {
+    let prev = new Date(prevTs)
+    let diff_ms = (new Date()) - prev
+    return parseInt(diff_ms / 1000 / 60)
+}
+
 window.onload = function () {
     createUI();
 
     document.getElementById('refresh-btn').addEventListener('click', onClickRefreshBtn)
-    // storageGet(['ts'], storage => {
-    //     document.getElementById('ts').innerText = storage.ts
-    // })
+    storageGet([KEY_UPDATE_TS], storage => {
+        document.getElementById('updated-at').innerText = `🕗${timeDiff(storage.ts)}min ago`
+    })
 }

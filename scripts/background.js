@@ -131,7 +131,7 @@ function updateLiveStream() {
                             // save on storage
                             storageSetPromise({
                                 [KEY_LIVE_STREAM]: liveStreams,
-                                'ts': new Date().toString(),
+                                [KEY_UPDATE_TS]: new Date().toISOString(),
                             }).then(res => {
                                 chrome.browserAction.setBadgeBackgroundColor({color: [119, 44, 232, 255]});
                                 chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
@@ -144,18 +144,24 @@ function updateLiveStream() {
     })
 }
 
-window.onload = function () {
-    let alarmName = 'updateLiveStream'
+/**
+ * onAlarm + onMessage handler
+ * @param data
+ */
+function eventHandler(data) {
+    if (data.name === EVENT_UPDATE_LIVE_STREAM) {
+        updateLiveStream()
+    }
+}
 
-    chrome.alarms.create(alarmName, {
+window.onload = function () {
+    chrome.alarms.create(EVENT_UPDATE_LIVE_STREAM, {
         when: 1000, // Initial execution after 1 second
         // periodInMinutes: 10, // every 10 minutes
-        periodInMinutes: 1, // FIXME delete
+        periodInMinutes: 3, // FIXME delete
+        // periodInMinutes: 1, // FIXME delete
     })
 
-    chrome.alarms.onAlarm.addListener(function (alarm) {
-        if (alarm.name === alarmName) {
-            updateLiveStream()
-        }
-    })
+    chrome.alarms.onAlarm.addListener(eventHandler)
+    chrome.runtime.onMessage.addListener(eventHandler)
 }

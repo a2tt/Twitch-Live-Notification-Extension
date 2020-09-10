@@ -1,3 +1,31 @@
+@-moz-keyframes spin {
+    from {
+        -moz-transform: rotate(0deg);
+    }
+    to {
+        -moz-transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes spin {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
 * {
     padding: 0;
     margin: 0;
@@ -12,31 +40,63 @@ a {
     color: inherit;
 }
 
-#container {
-    width: 300px;
-    user-select: none;
+body {
     padding: 3px;
+}
+
+#header {
+    padding: 0 6px;
+    text-align: right;
+}
+
+#refresh-btn {
+    cursor: pointer;
+    display: inline-block;
+    padding: 2px;
+    vertical-align: middle;
+}
+
+#refresh-btn.spinning {
+    animation: spin 500ms infinite linear;
+}
+
+
+#container {
+    user-select: none;
+    padding: 0 3px 3px;
+    width: 300px;
 }
 
 div.game-group {
     padding: 3px;
 }
 
+.single-line {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 p.game-name {
-    border-bottom: 1px solid #c5c5c5;
     cursor: pointer;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #a5a5a5;
+    font-weight: 500;
     font-size: 12px;
     text-transform: uppercase;
-    padding-bottom: 3px;
-    font-weight: 500;
 }
 
 div.stream-wrapper {
-    padding: 3px 6px;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
     cursor: pointer;
+    margin: 0 4px;
+    padding: 3px 4px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 div.stream-wrapper:hover {
     background-color: rgba(0, 0, 0, 0.1);
+}
+
+#footer {
+    text-align: right;
 }
