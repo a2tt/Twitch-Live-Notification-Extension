@@ -29,17 +29,25 @@ window.onload = function () {
         let params = new URLSearchParams(urlHash.substring(1)); // chrome-extension://.../option.html#access_token=...
         let access_token = params.get('access_token')
         if (access_token) {
+            // save access token
             storageSetPromise({
                 [KEY_TWITCH_TOKEN]: access_token
             }).then(res => {
-                // 로그인 한 유저의 정보로 데이터 초기 세팅
-                bgPage.getUserInfo().then(res => {
-                    storageSetPromise({
-                        [KEY_FOLLOWER_ID]: res.data[0].id,
-                        [KEY_FOLLOWER_LOGIN_ID]:res.data[0].login,
-                    }).then(res => {
-                        window.location.href = chrome.extension.getURL('option.html');
-                    })
+                // get follower config
+                storageGetPromise([KEY_FOLLOWER_ID, KEY_FOLLOWER_LOGIN_ID]
+                ).then(res => {
+                    // if follower id is not configured, set user's data
+                    if (!res[KEY_FOLLOWER_ID] || !res[KEY_FOLLOWER_LOGIN_ID]) {
+                        // 로그인 한 유저의 정보로 데이터 초기 세팅
+                        bgPage.getUserInfo().then(res => {
+                            storageSetPromise({
+                                [KEY_FOLLOWER_ID]: res.data[0].id,
+                                [KEY_FOLLOWER_LOGIN_ID]: res.data[0].login,
+                            }).then(res => {
+                                window.location.href = chrome.extension.getURL('option.html');
+                            })
+                        })
+                    }
                 })
             })
         }
@@ -54,11 +62,7 @@ window.onload = function () {
 
     // logout button binding
     logoutBtn.addEventListener('click', e => {
-        storageSetPromise({
-            [KEY_TWITCH_TOKEN]: null,
-            [KEY_FOLLOWER_ID]: null,
-            [KEY_FOLLOWER_LOGIN_ID]: null,
-        }).then(res => window.location.reload())
+        storageClearCredential().then(res => window.location.reload())
     })
 
     // form submit binding
@@ -67,7 +71,7 @@ window.onload = function () {
         e.preventDefault();
         let followerLoginId = e.currentTarget['follower-login-id'].value;
         if (!followerLoginId) {
-            storageClear();
+            storageClearCredential();
             return;
         }
 
