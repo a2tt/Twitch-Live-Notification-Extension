@@ -89,6 +89,13 @@ function updateTs() {
 
 }
 
+function eventHandler(data) {
+    if (data.name === EVENT_REFRESHED) {
+        console.log('refreshedddd');
+        updateTs();
+    }
+}
+
 window.onload = function () {
     createUI();
     document.getElementById('refresh-btn').addEventListener('click', onClickRefreshBtn);
@@ -96,4 +103,6 @@ window.onload = function () {
     setInterval(_ => {
         updateTs();
     }, 20000)
+
+    chrome.runtime.onMessage.addListener(eventHandler);
 }

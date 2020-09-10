@@ -131,6 +131,7 @@ function updateLiveStream() {
                             }).then(res => {
                                 chrome.browserAction.setBadgeBackgroundColor({color: [119, 44, 232, 255]});
                                 chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
+                                chrome.runtime.sendMessage({'name': EVENT_REFRESHED});
                             })
                         })
                     })

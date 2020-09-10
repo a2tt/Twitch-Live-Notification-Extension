@@ -73,7 +73,6 @@ window.onload = function () {
 
         // Get user id using login id and save it
         bgPage.getUserInfo(followerLoginId).then(res => {
-            console.log(res)
             storageSetPromise({
                 [KEY_FOLLOWER_ID]: res.data[0].id, // follower id
                 [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
