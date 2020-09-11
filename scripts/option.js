@@ -73,7 +73,11 @@ window.onload = function () {
         e.preventDefault();
         let followerLoginId = e.currentTarget['follower-login-id'].value;
         if (!followerLoginId) {
-            storageClearCredential();
+            // if not data, reset configs
+            storageSetPromise({
+                [KEY_FOLLOWER_ID]: null,
+                [KEY_FOLLOWER_LOGIN_ID]: null,
+            })
             return;
         }
 
@@ -85,6 +89,9 @@ window.onload = function () {
             }).then(res => {
                 messageDiv.innerText = 'saved'
                 bgPage.updateLiveStream(); // update
+                setTimeout(_ => {
+                    messageDiv.innerText = '';
+                }, 2000)
             })
         })
     })

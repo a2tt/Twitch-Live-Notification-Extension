@@ -9,10 +9,25 @@ a {
     color: #000;
 }
 
-input {
-    padding: 6px 10px;
-    border-radius: 4px;
+.item {
+    margin: 10px;
 }
+
+.item label, .item input {
+    display: block;
+}
+
+.item label {
+
+}
+
+.item input {
+    padding: 6px 10px;
+    margin: 2px 0;
+    border-radius: 4px;
+    border: 2px solid rgb(145, 71, 255);
+}
+
 input::placeholder {
     color: #777;
 }
@@ -45,6 +60,20 @@ input::placeholder {
     border-radius: 3px;
 }
 
+.btn {
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    background-color: #772ce8;
+    color: #efeff1;
+}
+
+#login-btn {
+    background-color: rgb(255, 0, 0);
+}
+
 #login-btn, #logout-btn {
     display: none;
+
 }

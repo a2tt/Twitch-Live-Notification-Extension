@@ -14,19 +14,18 @@
 
 <form method="post" class="option-form">
     <div class="item">
-        <button type="button" id="login-btn">Login</button>
-        <button type="button" id="logout-btn">Logout</button>
+        <button type="button" id="login-btn" class="btn">Login</button>
+        <button type="button" id="logout-btn" class="btn">Logout</button>
     </div>
+    <hr>
     <div class="item">
         <label for="follower-login-id">Follower ID</label>
-        <input type="text" placeholder="your twitch login ID. ex) 'usera2tt'"
+        <input type="text" placeholder="twitch login ID"
                id="follower-login-id" name="follower-login-id" autocomplete="off">
     </div>
     <div class="item">
-        <button type="submit" class="save-btn">save</button>
-    </div>
-    <div class="item">
-        <div id="message"></div>
+        <button type="submit" class="save-btn btn">save</button>
+        <span id="message"></span>
     </div>
 </form>
 
