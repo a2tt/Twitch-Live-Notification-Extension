@@ -23,54 +23,70 @@ function onClickRefreshBtn(e) {
 
 }
 
+function checkConfig() {
+    storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(res => {
+        // if configs are not set, show 'login required' message
+        if (!(res[KEY_TWITCH_TOKEN] && res[KEY_FOLLOWER_LOGIN_ID] && res[KEY_FOLLOWER_ID])) {
+            let loginRequiredElem = document.createElement('div')
+            loginRequiredElem.className = 'login-required';
+            loginRequiredElem.innerHTML = `
+            Twitch login required. <a href="${chrome.extension.getURL('option.html')}" target="_blank">option</a>
+            `;
+            container.appendChild(loginRequiredElem);
+        }
+    })
+}
+
 function createUI() {
     /* sample
 <div class="game-group">
     <p class="game-name single-line"
        data-href="https://twitch.tv/directory/game/Dead%20by%20Daylight">Leagues of Legends</p>
-    <div class="stream-wrapper single-line" data-href="">김도 (kimdoe)</div>
-    <div class="stream-wrapper single-line" data-href="">승우아빠_ (swab85)</div>
+    <div class="stream-wrapper single-line" data-href="">김도 (kimdoe)<span class="view-count">1,222</div>
 </div>
     */
     let container = document.getElementById('container');
     container.innerHTML = '';
-    storageGetPromise([KEY_LIVE_STREAM]).then(res => {
-        // group by game name
-        let gameGroup = {};
-        for (let s of res[KEY_LIVE_STREAM]) {
-            if (!gameGroup.hasOwnProperty(s.game_name))
-                gameGroup[s.game_name] = [];
-            gameGroup[s.game_name].push(s);
-        }
-
-        for (let gameName in gameGroup) {
-            // create UI element
-            let gameGroupElem = document.createElement('div');
-            gameGroupElem.className = 'game-group';
-            let gameNameElem = document.createElement('p');
-            gameNameElem.className = 'game-name single-line';
-            gameNameElem.innerText = gameName;
-            gameNameElem.setAttribute('data-href', 'https://twitch.tv/directory/game/' + encodeURIComponent(gameName));
-            gameNameElem.onclick = function () {
-                chrome.tabs.create({url: this.getAttribute('data-href')});
-                return false;
+    storageGetPromise([KEY_LIVE_STREAM, KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(res => {
+        // only if configs are set all
+        if (res[KEY_TWITCH_TOKEN] && res[KEY_FOLLOWER_LOGIN_ID] && res[KEY_FOLLOWER_ID]) {
+            // group by game name
+            let gameGroup = {};
+            for (let s of res[KEY_LIVE_STREAM]) {
+                if (!gameGroup.hasOwnProperty(s.game_name))
+                    gameGroup[s.game_name] = [];
+                gameGroup[s.game_name].push(s);
             }
-            gameGroupElem.appendChild(gameNameElem);
-            for (let stream of gameGroup[gameName]) {
-                let streamElem = document.createElement('div');
-                streamElem.className = 'stream-wrapper single-line';
-                streamElem.setAttribute('data-href', `https://twitch.tv/${stream.user_login}`);
-                streamElem.innerText = `${stream.user_name} (${stream.user_login})`;
-                streamElem.onclick = function () {
+
+            for (let gameName in gameGroup) {
+                // create UI element
+                let gameGroupElem = document.createElement('div');
+                gameGroupElem.className = 'game-group';
+                let gameNameElem = document.createElement('p');
+                gameNameElem.className = 'game-name single-line';
+                gameNameElem.innerText = gameName;
+                gameNameElem.setAttribute('data-href', 'https://twitch.tv/directory/game/' + encodeURIComponent(gameName));
+                gameNameElem.onclick = function () {
                     chrome.tabs.create({url: this.getAttribute('data-href')});
                     return false;
                 }
-                gameGroupElem.appendChild(streamElem);
+                gameGroupElem.appendChild(gameNameElem);
+                for (let stream of gameGroup[gameName]) {
+                    let streamElem = document.createElement('div');
+                    streamElem.className = 'stream-wrapper single-line';
+                    streamElem.setAttribute('data-href', `https://twitch.tv/${stream.user_login}`);
+                    streamElem.onclick = function () {
+                        chrome.tabs.create({url: this.getAttribute('data-href')});
+                        return false;
+                    }
+                    streamElem.innerHTML = `${stream.user_name} (${stream.user_login})<span class="view-count">${stream.viewer_count}</span>`
+                    gameGroupElem.appendChild(streamElem);
+                }
+                container.appendChild(gameGroupElem);
             }
-            container.appendChild(gameGroupElem);
+            // refresh updated at
+            updateTs();
         }
-        // refresh updated at
-        updateTs();
     })
 
 }
@@ -97,10 +113,11 @@ function eventHandler(data) {
 }
 
 window.onload = function () {
+    checkConfig();
     createUI();
+
     let refreshBtn = document.getElementById('refresh-btn');
     refreshBtn.addEventListener('click', onClickRefreshBtn);
-    refreshBtn.click();
 
     setInterval(_ => {
         updateTs();

@@ -47,6 +47,8 @@ window.onload = function () {
                                 window.location.href = chrome.extension.getURL('option.html');
                             })
                         })
+                    } else {
+                        window.location.href = chrome.extension.getURL('option.html');
                     }
                 })
             })

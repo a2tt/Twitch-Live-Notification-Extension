@@ -109,6 +109,23 @@ div.stream-wrapper:hover {
     background-color: rgba(95, 95, 95, 0.1);
 }
 
+.view-count {
+    float: right;
+}
+
 #footer {
     text-align: right;
+}
+
+.login-required {
+    display: block;
+    margin: 20px;
+    text-align: center;
+}
+
+.login-required a {
+    background-color: #acacac;
+    padding: 0 3px;
+    border-radius: 6px;
+    color: #fff;
 }
