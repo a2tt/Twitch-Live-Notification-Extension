@@ -1,26 +1,9 @@
-window.onload = function () {
-    // background script `window`
-    let bgPage = chrome.extension.getBackgroundPage();
+var bgPage = chrome.extension.getBackgroundPage(); // background script's `window`
 
-    let followerIdInput = window.document.getElementById('follower-login-id');
-    let loginBtn = window.document.getElementById('login-btn')
-    let logoutBtn = window.document.getElementById('logout-btn')
-
-    storageGetPromise([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN]
-    ).then(storage => {
-        console.log(storage[KEY_FOLLOWER_LOGIN_ID])
-        console.log(storage[KEY_FOLLOWER_ID])
-        console.log(storage[KEY_TWITCH_TOKEN])
-        if (storage[KEY_FOLLOWER_LOGIN_ID]) {
-            followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
-        }
-        if (storage[KEY_TWITCH_TOKEN]) {
-            logoutBtn.style.display = 'block';
-        } else {
-            loginBtn.style.display = 'block';
-        }
-    })
-
+/**
+ * On twitch oauth login and redirected, set access_token from url hash
+ */
+function twitchLoginHandler() {
     // 로그인 처리 후, 데이터 저장
     let urlHash = window.location.hash
     if (urlHash) {
@@ -30,11 +13,11 @@ window.onload = function () {
             // save access token
             storageSetPromise({
                 [KEY_TWITCH_TOKEN]: access_token
-            }).then(res => {
+            }).then(_ => {
                 // get follower config
                 storageGetPromise([KEY_FOLLOWER_ID, KEY_FOLLOWER_LOGIN_ID]
                 ).then(res => {
-                    // if follower id is not configured, set login user's data
+                    // if follower id is not configured, set my account's info
                     if (!res[KEY_FOLLOWER_ID] || !res[KEY_FOLLOWER_LOGIN_ID]) {
                         // 로그인 한 유저의 정보로 데이터 초기 세팅
                         bgPage.getMyInfo().then(UserInfos => {
@@ -54,6 +37,35 @@ window.onload = function () {
             })
         }
     }
+}
+
+/**
+ * initialize UI
+ */
+function initUi() {
+    let followerIdInput = window.document.getElementById('follower-login-id');
+    let loginBtn = window.document.getElementById('login-btn');
+    let logoutBtn = window.document.getElementById('logout-btn');
+
+    storageGetPromise([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN]
+    ).then(storage => {
+        console.log(storage[KEY_FOLLOWER_LOGIN_ID])
+        console.log(storage[KEY_FOLLOWER_ID])
+        console.log(storage[KEY_TWITCH_TOKEN])
+        if (storage[KEY_FOLLOWER_LOGIN_ID]) {
+            followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
+        }
+        if (storage[KEY_TWITCH_TOKEN]) {
+            logoutBtn.style.display = 'block';
+        } else {
+            loginBtn.style.display = 'block';
+        }
+    })
+}
+
+function eventBinding() {
+    let loginBtn = window.document.getElementById('login-btn');
+    let logoutBtn = window.document.getElementById('logout-btn');
 
     // login button binding
     loginBtn.addEventListener('click', e => {
@@ -99,6 +111,11 @@ window.onload = function () {
     })
 }
 
+/**
+ * show text message
+ * @param message
+ * @param type
+ */
 function showMessage(message, type = 'info') {
     let messageDiv = window.document.getElementById('message');
     messageDiv.innerText = message;
@@ -110,4 +127,12 @@ function showMessage(message, type = 'info') {
             messageDiv.classList.remove(type)
         }, 2000)
     }
+}
+
+window.onload = function () {
+    twitchLoginHandler();
+
+    initUi();
+
+    eventBinding();
 }

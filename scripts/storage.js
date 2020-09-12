@@ -1,7 +1,7 @@
 /**
  * clear credentials
  *
- * @returns {Promise<unknown>}
+ * @returns {Promise<void>}
  */
 function storageClearCredential() {
     return new Promise((resolve, reject) => {
@@ -15,7 +15,7 @@ function storageClearCredential() {
 
 /**
  * @param {Array} key
- * @returns {Promise<unknown>}
+ * @returns {Promise<Object>}
  */
 function storageGetPromise(key) {
     return new Promise((resolve, reject) => {
@@ -27,7 +27,7 @@ function storageGetPromise(key) {
 
 /**
  * @param {Object} obj
- * @returns {Promise<unknown>}
+ * @returns {Promise<Object>}
  */
 function storageSetPromise(obj) {
     return new Promise((resolve, reject) => {
