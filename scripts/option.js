@@ -3,7 +3,6 @@ window.onload = function () {
     let bgPage = chrome.extension.getBackgroundPage();
 
     let followerIdInput = window.document.getElementById('follower-login-id');
-    let messageDiv = window.document.getElementById('message');
     let loginBtn = window.document.getElementById('login-btn')
     let logoutBtn = window.document.getElementById('logout-btn')
 
@@ -39,7 +38,7 @@ window.onload = function () {
                     // if follower id is not configured, set login user's data
                     if (!res[KEY_FOLLOWER_ID] || !res[KEY_FOLLOWER_LOGIN_ID]) {
                         // 로그인 한 유저의 정보로 데이터 초기 세팅
-                        bgPage.getUserInfo().then(res => {
+                        bgPage.getMyInfo().then(res => {
                             storageSetPromise({
                                 [KEY_FOLLOWER_ID]: res.data[0].id,
                                 [KEY_FOLLOWER_LOGIN_ID]: res.data[0].login,
@@ -84,18 +83,32 @@ window.onload = function () {
         }
 
         // Get user id using login id and save it
-        bgPage.getUserInfo(followerLoginId).then(res => {
-            storageSetPromise({
-                [KEY_FOLLOWER_ID]: res.data[0].id, // follower id
-                [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
-            }).then(res => {
-                messageDiv.innerText = 'saved'
-                bgPage.updateLiveStream(); // update
-                setTimeout(_ => {
-                    messageDiv.innerText = '';
-                }, 2000)
-            })
+        bgPage.getUserInfos([followerLoginId]).then(res => {
+            if (res.data.length === 0) {
+                // 등록한 아이디가 존재하지 않는 경우
+                showMessage('User does not exist', 'error');
+            } else {
+                storageSetPromise({
+                    [KEY_FOLLOWER_ID]: res.data[0].id, // follower id
+                    [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
+                }).then(res => {
+                    bgPage.updateLiveStream(); // update
+                    showMessage('saved');
+                })
+            }
         })
     })
 
+}
+function showMessage(message, type='info') {
+    let messageDiv = window.document.getElementById('message');
+    messageDiv.innerText = message;
+    messageDiv.className = '';
+    messageDiv.classList.add(type)
+    if (type !== 'error') {
+        setTimeout(_ => {
+            messageDiv.innerText = '';
+            messageDiv.classList.remove(type)
+        }, 2000)
+    }
 }
