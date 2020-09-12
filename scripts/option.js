@@ -36,7 +36,7 @@ window.onload = function () {
                 // get follower config
                 storageGetPromise([KEY_FOLLOWER_ID, KEY_FOLLOWER_LOGIN_ID]
                 ).then(res => {
-                    // if follower id is not configured, set user's data
+                    // if follower id is not configured, set login user's data
                     if (!res[KEY_FOLLOWER_ID] || !res[KEY_FOLLOWER_LOGIN_ID]) {
                         // 로그인 한 유저의 정보로 데이터 초기 세팅
                         bgPage.getUserInfo().then(res => {
@@ -44,10 +44,12 @@ window.onload = function () {
                                 [KEY_FOLLOWER_ID]: res.data[0].id,
                                 [KEY_FOLLOWER_LOGIN_ID]: res.data[0].login,
                             }).then(res => {
+                                chrome.runtime.sendMessage({'name': 'updateLiveStream'});
                                 window.location.href = chrome.extension.getURL('option.html');
                             })
                         })
                     } else {
+                        chrome.runtime.sendMessage({'name': 'updateLiveStream'});
                         window.location.href = chrome.extension.getURL('option.html');
                     }
                 })
