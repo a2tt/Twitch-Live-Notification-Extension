@@ -1,9 +1,9 @@
-var bgPage = chrome.extension.getBackgroundPage(); // background script's `window`
 
 /**
  * On twitch oauth login and redirected, set access_token from url hash
  */
 function twitchLoginHandler() {
+    let bgPage = chrome.extension.getBackgroundPage(); // background script's `window`
     // 로그인 처리 후, 데이터 저장
     let urlHash = window.location.hash
     if (urlHash) {
@@ -64,6 +64,7 @@ function initUi() {
 }
 
 function eventBinding() {
+    let bgPage = chrome.extension.getBackgroundPage(); // background script's `window`
     let loginBtn = window.document.getElementById('login-btn');
     let logoutBtn = window.document.getElementById('logout-btn');
 

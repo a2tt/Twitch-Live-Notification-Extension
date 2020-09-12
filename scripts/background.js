@@ -147,7 +147,7 @@ function getGameName(gameIds, twitchToken) {
  */
 function updateLiveStream() {
     storageGetPromise([KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN]).then(storage => {
-        if (storage[KEY_FOLLOWER_ID]) {
+        if (storage[KEY_TWITCH_TOKEN] && storage[KEY_FOLLOWER_ID]) {
             // get following list
             getFollower(storage[KEY_FOLLOWER_ID], storage[KEY_TWITCH_TOKEN]
             ).then(followingUsers => {
@@ -190,11 +190,15 @@ function updateLiveStream() {
                                     viewer_count: data.viewer_count,
                                 });
                             });
+                            liveStreams.sort((a, b) => a.viewer_count < b.viewer_count ? 1 : -1)
                             _setLiveStream(liveStreams);
                         })
                     })
                 })
             })
+        } else {
+            chrome.browserAction.setBadgeBackgroundColor({color: [255, 0, 0, 255]});
+            chrome.browserAction.setBadgeText({"text": '!'});
         }
     })
 }
@@ -210,7 +214,7 @@ function _setLiveStream(liveStreams) {
         [KEY_LIVE_STREAM]: liveStreams,
         [KEY_UPDATE_TS]: new Date().toISOString(),
     }).then(res => {
-        chrome.browserAction.setBadgeBackgroundColor({color: [119, 44, 232, 255]});
+        chrome.browserAction.setBadgeBackgroundColor({color: [141, 75, 255, 255]});
         chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
         chrome.runtime.sendMessage({'name': EVENT_REFRESHED});
     })

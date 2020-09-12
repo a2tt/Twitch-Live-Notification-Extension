@@ -1,5 +1,5 @@
 // credentials
-let TWITCH_CLIENT_ID = 'tqd0h5qcgtgyx26su37d910qwu3bky'
+let TWITCH_CLIENT_ID = 's1rfeomm030qieexrb8yuxa5z4ae2m'
 
 // storage key
 let KEY_TWITCH_TOKEN = 'twitchToken'
