@@ -6,7 +6,8 @@ window.onload = function () {
     let loginBtn = window.document.getElementById('login-btn')
     let logoutBtn = window.document.getElementById('logout-btn')
 
-    storageGet([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN], storage => {
+    storageGetPromise([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN]
+    ).then(storage => {
         console.log(storage[KEY_FOLLOWER_LOGIN_ID])
         console.log(storage[KEY_FOLLOWER_ID])
         console.log(storage[KEY_TWITCH_TOKEN])
@@ -98,7 +99,7 @@ window.onload = function () {
     })
 }
 
-function showMessage(message, type='info') {
+function showMessage(message, type = 'info') {
     let messageDiv = window.document.getElementById('message');
     messageDiv.innerText = message;
     messageDiv.className = '';

@@ -36,20 +36,3 @@ function storageSetPromise(obj) {
         })
     })
 }
-
-/**
- * @param {String} key
- * @param {String} value
- * @param {Function} callback
- */
-function storageSet(key, value, callback) {
-    chrome.storage.local.set({[key]: value}, callback);
-}
-
-/**
- * @param {Array} key
- * @param {Function} callback
- */
-function storageGet(key, callback) {
-    chrome.storage.local.get(key, result => callback(result));
-}

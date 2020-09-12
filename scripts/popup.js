@@ -99,7 +99,8 @@ function timeDiff(prevTs) {
 
 function updateTs() {
     let updatedAt = document.getElementById('updated-at');
-    storageGet([KEY_UPDATE_TS], storage => {
+    storageGetPromise([KEY_UPDATE_TS]
+    ).then(storage => {
         updatedAt.innerText = `🕗${timeDiff(storage[KEY_UPDATE_TS])}min ago`;
     })
 
