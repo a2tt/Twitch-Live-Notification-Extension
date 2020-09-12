@@ -19,24 +19,40 @@ function request(url, qs = '', twitchToken = '', method = 'GET') {
 }
 
 /**
- * Get user info by user id(integer).
+ * Get multiple user's info by user id(integer).
  * convert 'id'(int) to 'login id'(str)
  *
- * @param userId
+ * @param userIds
  * @param by
  * @returns {Promise<Object>}
  */
-function getUserInfo(userId = null, by = 'login') {
+function getUserInfos(userIds = null, by = 'login') {
+    let qss = [];
+    if (userIds) {
+        for (let i=0; i< Math.ceil(userIds.length / 100); i++) {
+            let qs = new URLSearchParams()
+            userIds.slice(100 * i, 100 * (i+1)).forEach(id => qs.append(by, id.trim()))
+            qss.push(qs)
+        }
+    } else {
+        qss.push(null)
+    }
+
     return storageGetPromise([KEY_TWITCH_TOKEN]).then(storage => {
         let url = 'https://api.twitch.tv/helix/users';
-        let qs = new URLSearchParams()
-        if (Array.isArray(userId)) {
-            userId.forEach(id => qs.append(by, id))
-        } else if (userId) {
-            qs.append(by, userId);
-        }
-        return request(url, qs, storage[KEY_TWITCH_TOKEN]);
+
+        let requests = []
+        qss.forEach(qs => requests.push(request(url, qs, storage[KEY_TWITCH_TOKEN])))
+        return Promise.all(requests).then(values => {
+            let res = {'data': []}
+            values.forEach(r => res.data = res.data.concat(r.data));
+            return res
+        });
     });
+}
+
+function getMyInfo() {
+    return getUserInfos(null)
 }
 
 /**
@@ -44,15 +60,33 @@ function getUserInfo(userId = null, by = 'login') {
  *
  * @param followerId
  * @param twitchToken
+ * @param cursor
+ * @param data: concatenated response
  * @returns {Promise<Object>}
  */
-function getFollower(followerId, twitchToken) {
+function getFollower(followerId, twitchToken, cursor=null, data=[]) {
+    /*
+    {
+     data: [{from_id: <String>, from_name: <String>, to_id: <String>, to_name: <String>, followed_at: <String>}, <String>],
+     pagination: {cursor: <String>},
+     total: <Number>
+    }
+     */
     let url = 'https://api.twitch.tv/helix/users/follows'
     let qs = new URLSearchParams({
         from_id: followerId,
-        first: 100,
+        first: '100',
     })
-    return request(url, qs, twitchToken);
+    cursor && qs.set('after', cursor) // pagination cursor
+
+    return request(url, qs, twitchToken).then(res => {
+        data = data.concat(res.data)
+        if (String(res.data.length) === qs.get('first') && res.pagination.hasOwnProperty('cursor')) {
+            return getFollower(followerId, twitchToken, res.pagination.cursor, data)
+        } else {
+            return data;
+        }
+    });
 }
 
 /**
@@ -60,15 +94,26 @@ function getFollower(followerId, twitchToken) {
  *
  * @param userIds
  * @param twitchToken
+ * @param cursor
+ * @param data: concatenated response
  * @returns {Promise<Object>}
  */
-function getActiveStream(userIds, twitchToken) {
+function getActiveStream(userIds, twitchToken, cursor=null, data=[]) {
     let url = 'https://api.twitch.tv/helix/streams'
-    let qs = new URLSearchParams({
-        first: 100,
+    let qss = [];
+    for (let i=0; i< Math.ceil(userIds.length / 100); i++) {
+        let qs = new URLSearchParams()
+        userIds.slice(100 * i, 100 * (i+1)).forEach(id => qs.append('user_id', id.trim()));
+        qss.push(qs);
+    }
+
+    let requests = []
+    qss.forEach(qs => requests.push(request(url, qs, twitchToken)))
+    return Promise.all(requests).then(values => {
+       let res = {'data': []};
+       values.forEach(r => res.data = res.data.concat(r.data));
+       return res;
     });
-    userIds.forEach(userId => qs.append('user_id', userId));
-    return request(url, qs, twitchToken);
 }
 
 /**
@@ -92,18 +137,21 @@ function updateLiveStream() {
         if (storage[KEY_FOLLOWER_ID]) {
             // get following list
             getFollower(storage[KEY_FOLLOWER_ID], storage[KEY_TWITCH_TOKEN]
-            ).then(res1 => {
+            ).then(followingUsers => {
                 let userIds = [];
-                res1.data.forEach(info => userIds.push(info.to_id));
+                followingUsers.forEach(info => userIds.push(info.to_id));
+
                 // need followee name not id
-                getUserInfo(userIds, 'id').then(resUserInfo => {
+                getUserInfos(userIds, 'id').then(resUserInfo => {
                     let userNameMap = {};
                     resUserInfo.data.forEach(data => userNameMap[data.id] = data.login);
+
                     // get active stream in following list
                     getActiveStream(userIds, storage[KEY_TWITCH_TOKEN]
                     ).then(res2 => {
                         let gameIds = [];
                         res2.data.forEach(data => gameIds.push(data.game_id));
+
                         // convert `game_id` to `game_name`
                         getGameName(gameIds, storage[KEY_TWITCH_TOKEN]
                         ).then(res3 => {
@@ -123,6 +171,7 @@ function updateLiveStream() {
                                     viewer_count: data.viewer_count,
                                 });
                             });
+
                             // save on storage
                             storageSetPromise({
                                 [KEY_LIVE_STREAM]: liveStreams,
