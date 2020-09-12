@@ -20,8 +20,6 @@ window.onload = function () {
         }
     })
 
-    // TODO access token 무한 갱신
-
     // 로그인 처리 후, 데이터 저장
     let urlHash = window.location.hash
     if (urlHash) {
@@ -38,10 +36,10 @@ window.onload = function () {
                     // if follower id is not configured, set login user's data
                     if (!res[KEY_FOLLOWER_ID] || !res[KEY_FOLLOWER_LOGIN_ID]) {
                         // 로그인 한 유저의 정보로 데이터 초기 세팅
-                        bgPage.getMyInfo().then(res => {
+                        bgPage.getMyInfo().then(UserInfos => {
                             storageSetPromise({
-                                [KEY_FOLLOWER_ID]: res.data[0].id,
-                                [KEY_FOLLOWER_LOGIN_ID]: res.data[0].login,
+                                [KEY_FOLLOWER_ID]: UserInfos[0].id,
+                                [KEY_FOLLOWER_LOGIN_ID]: UserInfos[0].login,
                             }).then(res => {
                                 chrome.runtime.sendMessage({'name': 'updateLiveStream'});
                                 window.location.href = chrome.extension.getURL('option.html');
@@ -83,23 +81,23 @@ window.onload = function () {
         }
 
         // Get user id using login id and save it
-        bgPage.getUserInfos([followerLoginId]).then(res => {
-            if (res.data.length === 0) {
+        bgPage.getUserInfos([followerLoginId]).then(userInfos => {
+            if (userInfos.length === 0) {
                 // 등록한 아이디가 존재하지 않는 경우
                 showMessage('User does not exist', 'error');
             } else {
                 storageSetPromise({
-                    [KEY_FOLLOWER_ID]: res.data[0].id, // follower id
+                    [KEY_FOLLOWER_ID]: userInfos[0].id, // follower id
                     [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
-                }).then(res => {
+                }).then(_ => {
                     bgPage.updateLiveStream(); // update
                     showMessage('saved');
                 })
             }
         })
     })
-
 }
+
 function showMessage(message, type='info') {
     let messageDiv = window.document.getElementById('message');
     messageDiv.innerText = message;

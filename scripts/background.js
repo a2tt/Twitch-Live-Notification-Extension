@@ -1,3 +1,12 @@
+/**
+ * Call twitch api
+ *
+ * @param url
+ * @param qs
+ * @param twitchToken
+ * @param method
+ * @returns {Promise<Response | void>}
+ */
 function request(url, qs = '', twitchToken = '', method = 'GET') {
     url = qs ? `${url}?${qs}` : url
     return fetch(url, {
@@ -24,7 +33,7 @@ function request(url, qs = '', twitchToken = '', method = 'GET') {
  *
  * @param userIds
  * @param by
- * @returns {Promise<Object>}
+ * @returns {Promise<Array>}
  */
 function getUserInfos(userIds = null, by = 'login') {
     let qss = [];
@@ -46,11 +55,15 @@ function getUserInfos(userIds = null, by = 'login') {
         return Promise.all(requests).then(values => {
             let res = {'data': []}
             values.forEach(r => res.data = res.data.concat(r.data));
-            return res
+            return res.data
         });
     });
 }
 
+/**
+ * Get my info
+ * @returns {Promise<Array>}
+ */
 function getMyInfo() {
     return getUserInfos(null)
 }
@@ -62,7 +75,7 @@ function getMyInfo() {
  * @param twitchToken
  * @param cursor
  * @param data: concatenated response
- * @returns {Promise<Object>}
+ * @returns {Promise<Array>}
  */
 function getFollower(followerId, twitchToken, cursor=null, data=[]) {
     /*
@@ -96,7 +109,7 @@ function getFollower(followerId, twitchToken, cursor=null, data=[]) {
  * @param twitchToken
  * @param cursor
  * @param data: concatenated response
- * @returns {Promise<Object>}
+ * @returns {Promise<Array>}
  */
 function getActiveStream(userIds, twitchToken, cursor=null, data=[]) {
     let url = 'https://api.twitch.tv/helix/streams'
@@ -112,7 +125,7 @@ function getActiveStream(userIds, twitchToken, cursor=null, data=[]) {
     return Promise.all(requests).then(values => {
        let res = {'data': []};
        values.forEach(r => res.data = res.data.concat(r.data));
-       return res;
+       return res.data;
     });
 }
 
@@ -126,7 +139,7 @@ function getGameName(gameIds, twitchToken) {
     let url = 'https://api.twitch.tv/helix/games'
     let qs = new URLSearchParams();
     gameIds.forEach(gameId => qs.append('id', gameId));
-    return request(url, qs, twitchToken);
+    return request(url, qs, twitchToken).then(res => res.data);
 }
 
 /**
@@ -138,28 +151,34 @@ function updateLiveStream() {
             // get following list
             getFollower(storage[KEY_FOLLOWER_ID], storage[KEY_TWITCH_TOKEN]
             ).then(followingUsers => {
+                // if following no one, return
+                if (!followingUsers.length)
+                    return _setLiveStream([]);
                 let userIds = [];
                 followingUsers.forEach(info => userIds.push(info.to_id));
 
-                // need followee name not id
-                getUserInfos(userIds, 'id').then(resUserInfo => {
+                // convert followee id to login_id
+                getUserInfos(userIds, 'id').then(userInfos => {
                     let userNameMap = {};
-                    resUserInfo.data.forEach(data => userNameMap[data.id] = data.login);
+                    userInfos.forEach(data => userNameMap[data.id] = data.login);
 
                     // get active stream in following list
                     getActiveStream(userIds, storage[KEY_TWITCH_TOKEN]
-                    ).then(res2 => {
+                    ).then(streamInfos => {
+                        // if no one is streaming, return
+                        if (!streamInfos.length) return _setLiveStream([]);
+
                         let gameIds = [];
-                        res2.data.forEach(data => gameIds.push(data.game_id));
+                        streamInfos.filter(info => info.type === 'live').forEach(data => gameIds.push(data.game_id));
 
                         // convert `game_id` to `game_name`
                         getGameName(gameIds, storage[KEY_TWITCH_TOKEN]
-                        ).then(res3 => {
+                        ).then(gameInfo => {
                             let gameNameMap = {};
-                            res3.data.forEach(data => gameNameMap[data.id] = data.name);
+                            gameInfo.forEach(data => gameNameMap[data.id] = data.name);
                             // insert game_name to stream data
                             let liveStreams = [];
-                            res2.data.forEach(data => {
+                            streamInfos.forEach(data => {
                                 data.game_name = gameNameMap.hasOwnProperty(data.game_id) ? gameNameMap[data.game_id] : ''
                                 liveStreams.push({
                                     user_name: data.user_name,
@@ -171,21 +190,29 @@ function updateLiveStream() {
                                     viewer_count: data.viewer_count,
                                 });
                             });
-
-                            // save on storage
-                            storageSetPromise({
-                                [KEY_LIVE_STREAM]: liveStreams,
-                                [KEY_UPDATE_TS]: new Date().toISOString(),
-                            }).then(res => {
-                                chrome.browserAction.setBadgeBackgroundColor({color: [119, 44, 232, 255]});
-                                chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
-                                chrome.runtime.sendMessage({'name': EVENT_REFRESHED});
-                            })
+                            _setLiveStream(liveStreams);
                         })
                     })
                 })
             })
         }
+    })
+}
+
+/**
+ *
+ * @param liveStreams
+ * @private
+ */
+function _setLiveStream(liveStreams) {
+    // save on storage
+    storageSetPromise({
+        [KEY_LIVE_STREAM]: liveStreams,
+        [KEY_UPDATE_TS]: new Date().toISOString(),
+    }).then(res => {
+        chrome.browserAction.setBadgeBackgroundColor({color: [119, 44, 232, 255]});
+        chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
+        chrome.runtime.sendMessage({'name': EVENT_REFRESHED});
     })
 }
 
