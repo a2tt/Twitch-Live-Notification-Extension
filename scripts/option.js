@@ -40,7 +40,7 @@ function twitchLoginHandler() {
 }
 
 /**
- * initialize UI
+ * initialize option UI
  */
 function initUi() {
     let followerIdInput = window.document.getElementById('follower-login-id');

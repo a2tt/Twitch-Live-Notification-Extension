@@ -23,6 +23,9 @@ function onClickRefreshBtn(e) {
 
 }
 
+/**
+ * check whether required configs exist
+ */
 function checkConfig() {
     storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(res => {
         // if configs are not set, show 'login required' message
@@ -37,6 +40,9 @@ function checkConfig() {
     })
 }
 
+/**
+ * create popup UI
+ */
 function createUI() {
     /* sample
 <div class="game-group">
@@ -91,24 +97,30 @@ function createUI() {
 
 }
 
+/**
+ * calculate time difference
+ * @param {String} prevTs
+ * @returns {number}
+ */
 function timeDiff(prevTs) {
     let prev = new Date(prevTs);
     let diff_ms = (new Date()) - prev;
     return parseInt(diff_ms / 1000 / 60);
 }
 
+/**
+ * update latest refreshed time
+ */
 function updateTs() {
     let updatedAt = document.getElementById('updated-at');
     storageGetPromise([KEY_UPDATE_TS]
     ).then(storage => {
         updatedAt.innerText = `🕗${timeDiff(storage[KEY_UPDATE_TS])}min ago`;
     })
-
 }
 
 function eventHandler(data) {
     if (data.name === EVENT_REFRESHED) {
-        console.log('refreshedddd');
         updateTs();
     }
 }
