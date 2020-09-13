@@ -82,7 +82,9 @@ function eventBinding() {
         e.preventDefault();
         storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID]).then(storage => {
             // if the token has not set, return
-            if (!storage[KEY_TWITCH_TOKEN]) return window.location.reload();
+            if (!storage[KEY_TWITCH_TOKEN]) {
+                return showMessage('Login required.', 'error');
+            }
 
             let followerLoginId = e.target['follower-login-id'].value;
             let notification = e.target['notification'].checked;
