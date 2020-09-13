@@ -1,15 +1,15 @@
 {
   "manifest_version": 2,
-  "name": "Twitcher",
+  "name": "Twatcher",
   "version": "0.0.1",
-  "description": "List streamers on live broadcast I following.",
+  "description": "Twitch helper. List twitch streamers on live broadcast I follow",
   "permissions": [
     "storage",
     "alarms",
     "tabs"
   ],
   "browser_action": {
-    "default_icon": "/images/1.png",
+    "default_icon": "/images/icon_16.png",
     "default_popup": "popup.html"
   },
   "options_page": "option.html",
@@ -22,9 +22,9 @@
     "persistent": false
   },
   "icons": {
-    "16": "/images/1.png",
-    "48": "/images/1.png",
-    "128": "/images/1.png"
+    "16": "/images/icon_16.png",
+    "48": "/images/icon_48.png",
+    "128": "/images/icon_128.png"
   },
   "web_accessible_resources": [
     "images/*.png",
