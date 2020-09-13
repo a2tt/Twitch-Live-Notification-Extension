@@ -79,17 +79,18 @@ function eventBinding() {
     // form submit binding
     let optionForm = document.getElementsByClassName('option-form')[0];
     optionForm.addEventListener('submit', function (e) {
-        storageGetPromise([KEY_TWITCH_TOKEN]).then(storage => {
+        e.preventDefault();
+        storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID]).then(storage => {
             // if the token has not set, return
-            if (!storage[KEY_TWITCH_TOKEN]) return;
+            if (!storage[KEY_TWITCH_TOKEN]) window.location.reload();
 
-            e.preventDefault();
-            let followerLoginId = e.currentTarget['follower-login-id'].value;
-            let notification = e.currentTarget['notification'].checked;
+            let followerLoginId = e.target['follower-login-id'].value;
+            let notification = e.target['notification'].checked;
 
             storageSetPromise({
                 [KEY_NOTIFICATION]: notification,
             })
+
             // if not data, reset configs
             if (!followerLoginId) {
                 return storageSetPromise({
@@ -98,21 +99,24 @@ function eventBinding() {
                 })
             }
 
-            // Get user id using login id and save it
-            bgPage.getUserInfos([followerLoginId]).then(userInfos => {
-                if (userInfos.length === 0) {
-                    // 등록한 아이디가 존재하지 않는 경우
-                    showMessage('User does not exist', 'error');
-                } else {
-                    storageSetPromise({
-                        [KEY_FOLLOWER_ID]: userInfos[0].id, // follower id
-                        [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
-                    }).then(_ => {
-                        bgPage.updateLiveStream(); // update
-                        showMessage('saved');
-                    })
-                }
-            })
+            if (storage[KEY_FOLLOWER_LOGIN_ID] !== followerLoginId) {
+                // Get user id using login id and save it
+                bgPage.getUserInfos([followerLoginId]).then(userInfos => {
+                    console.log(userInfos)
+                    if (userInfos.length === 0) {
+                        // 등록한 아이디가 존재하지 않는 경우
+                        showMessage('User does not exist', 'error');
+                    } else {
+                        storageSetPromise({
+                            [KEY_FOLLOWER_ID]: userInfos[0].id, // follower id
+                            [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
+                        }).then(_ => {
+                            chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
+                            showMessage('saved');
+                        })
+                    }
+                })
+            }
         })
     })
 }
@@ -131,7 +135,7 @@ function showMessage(message, type = 'info') {
         setTimeout(_ => {
             messageDiv.innerText = '';
             messageDiv.classList.remove(type)
-        }, 2000)
+        }, 3000)
     }
 }
 
