@@ -82,13 +82,15 @@ function eventBinding() {
         e.preventDefault();
         storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID]).then(storage => {
             // if the token has not set, return
-            if (!storage[KEY_TWITCH_TOKEN]) window.location.reload();
+            if (!storage[KEY_TWITCH_TOKEN]) return window.location.reload();
 
             let followerLoginId = e.target['follower-login-id'].value;
             let notification = e.target['notification'].checked;
 
             storageSetPromise({
                 [KEY_NOTIFICATION]: notification,
+            }).then(_ => {
+                showMessage('Notification option saved');
             })
 
             // if not data, reset configs
@@ -102,7 +104,6 @@ function eventBinding() {
             if (storage[KEY_FOLLOWER_LOGIN_ID] !== followerLoginId) {
                 // Get user id using login id and save it
                 bgPage.getUserInfos([followerLoginId]).then(userInfos => {
-                    console.log(userInfos)
                     if (userInfos.length === 0) {
                         // 등록한 아이디가 존재하지 않는 경우
                         showMessage('User does not exist', 'error');
@@ -112,7 +113,7 @@ function eventBinding() {
                             [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
                         }).then(_ => {
                             chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
-                            showMessage('saved');
+                            showMessage('Follower ID saved');
                         })
                     }
                 })
@@ -127,16 +128,17 @@ function eventBinding() {
  * @param type
  */
 function showMessage(message, type = 'info') {
-    let messageDiv = window.document.getElementById('message');
+    let messageContainer = window.document.getElementById('message-container');
+
+    let messageDiv = document.createElement('p');
     messageDiv.innerText = message;
-    messageDiv.className = '';
+    messageDiv.className = 'message';
     messageDiv.classList.add(type)
-    if (type !== 'error') {
-        setTimeout(_ => {
-            messageDiv.innerText = '';
-            messageDiv.classList.remove(type)
-        }, 3000)
-    }
+
+    messageContainer.appendChild(messageDiv);
+    setTimeout(_ => {
+        messageDiv.remove();
+    }, 5000)
 }
 
 window.onload = function () {
