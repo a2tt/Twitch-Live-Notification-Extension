@@ -38,9 +38,9 @@ function request(url, qs = '', twitchToken = '', method = 'GET') {
 function getUserInfos(userIds = null, by = 'login') {
     let qss = [];
     if (userIds) {
-        for (let i=0; i< Math.ceil(userIds.length / 100); i++) {
+        for (let i = 0; i < Math.ceil(userIds.length / 100); i++) {
             let qs = new URLSearchParams()
-            userIds.slice(100 * i, 100 * (i+1)).forEach(id => qs.append(by, id.trim()))
+            userIds.slice(100 * i, 100 * (i + 1)).forEach(id => qs.append(by, id.trim()))
             qss.push(qs)
         }
     } else {
@@ -77,7 +77,7 @@ function getMyInfo() {
  * @param data: concatenated response
  * @returns {Promise<Array>}
  */
-function getFollower(followerId, twitchToken, cursor=null, data=[]) {
+function getFollower(followerId, twitchToken, cursor = null, data = []) {
     /*
     {
      data: [{from_id: <String>, from_name: <String>, to_id: <String>, to_name: <String>, followed_at: <String>}, <String>],
@@ -111,21 +111,21 @@ function getFollower(followerId, twitchToken, cursor=null, data=[]) {
  * @param data: concatenated response
  * @returns {Promise<Array>}
  */
-function getActiveStream(userIds, twitchToken, cursor=null, data=[]) {
+function getActiveStream(userIds, twitchToken, cursor = null, data = []) {
     let url = 'https://api.twitch.tv/helix/streams'
     let qss = [];
-    for (let i=0; i< Math.ceil(userIds.length / 100); i++) {
+    for (let i = 0; i < Math.ceil(userIds.length / 100); i++) {
         let qs = new URLSearchParams()
-        userIds.slice(100 * i, 100 * (i+1)).forEach(id => qs.append('user_id', id.trim()));
+        userIds.slice(100 * i, 100 * (i + 1)).forEach(id => qs.append('user_id', id.trim()));
         qss.push(qs);
     }
 
     let requests = []
     qss.forEach(qs => requests.push(request(url, qs, twitchToken)))
     return Promise.all(requests).then(values => {
-       let res = {'data': []};
-       values.forEach(r => res.data = res.data.concat(r.data));
-       return res.data;
+        let res = {'data': []};
+        values.forEach(r => res.data = res.data.concat(r.data));
+        return res.data;
     });
 }
 
@@ -210,14 +210,49 @@ function updateLiveStream() {
  */
 function _setLiveStream(liveStreams) {
     // save on storage
-    storageSetPromise({
-        [KEY_LIVE_STREAM]: liveStreams,
-        [KEY_UPDATE_TS]: new Date().toISOString(),
-    }).then(res => {
-        chrome.browserAction.setBadgeBackgroundColor({color: [141, 75, 255, 255]});
-        chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
-        chrome.runtime.sendMessage({'name': EVENT_REFRESHED});
+    storageGetPromise([KEY_LIVE_STREAM]).then(res => {
+        // check new streams
+        let prevUserLogin = res[KEY_LIVE_STREAM].map(item => item.user_name);
+        let currUserLogin = liveStreams.map(item => item.user_name);
+        let newStreams = []
+        currUserLogin.forEach(userLogin => {
+            if (!prevUserLogin.includes(userLogin)) {
+                newStreams.push(userLogin)
+            }
+        })
+        // chrome noti if new streams
+        if (newStreams.length) notifyNewStream(newStreams);
+
+        // save
+        storageSetPromise({
+            [KEY_LIVE_STREAM]: liveStreams,
+            [KEY_UPDATE_TS]: new Date().toISOString(),
+        }).then(res => {
+            chrome.browserAction.setBadgeBackgroundColor({color: [141, 75, 255, 255]});
+            chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
+            chrome.runtime.sendMessage({'name': EVENT_REFRESHED});
+        })
     })
+}
+
+/**
+ * @param {Array} newStreams
+ */
+function notifyNewStream(newStreams) {
+    let message = `${newStreams.join(', ')} is streaming.`
+    notify(message);
+}
+
+/**
+ * @param {String} message
+ */
+function notify(message) {
+    chrome.notifications.create({
+        type: "basic",
+        title: "New live stream",
+        message: message,
+        iconUrl: "/images/icon_128.png",
+    });
 }
 
 /**
@@ -233,7 +268,7 @@ function eventHandler(data) {
 window.onload = function () {
     chrome.alarms.create(EVENT_UPDATE_LIVE_STREAM, {
         when: 1000, // Initial execution after 1 second
-        periodInMinutes: 3, // every n minutes
+        periodInMinutes: 1, // every n minutes
     })
 
     chrome.alarms.onAlarm.addListener(eventHandler);
