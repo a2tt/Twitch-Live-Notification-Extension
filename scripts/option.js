@@ -79,36 +79,40 @@ function eventBinding() {
     // form submit binding
     let optionForm = document.getElementsByClassName('option-form')[0];
     optionForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        let followerLoginId = e.currentTarget['follower-login-id'].value;
-        let notification = e.currentTarget['notification'].checked;
+        storageGetPromise([KEY_TWITCH_TOKEN]).then(storage => {
+            // if the token has not set, return
+            if (!storage[KEY_TWITCH_TOKEN]) return;
 
-        storageSetPromise({
-            [KEY_NOTIFICATION]: notification,
-        })
-        // if not data, reset configs
-        if (!followerLoginId) {
+            e.preventDefault();
+            let followerLoginId = e.currentTarget['follower-login-id'].value;
+            let notification = e.currentTarget['notification'].checked;
+
             storageSetPromise({
-                [KEY_FOLLOWER_ID]: null,
-                [KEY_FOLLOWER_LOGIN_ID]: null,
+                [KEY_NOTIFICATION]: notification,
             })
-            return;
-        }
-
-        // Get user id using login id and save it
-        bgPage.getUserInfos([followerLoginId]).then(userInfos => {
-            if (userInfos.length === 0) {
-                // 등록한 아이디가 존재하지 않는 경우
-                showMessage('User does not exist', 'error');
-            } else {
-                storageSetPromise({
-                    [KEY_FOLLOWER_ID]: userInfos[0].id, // follower id
-                    [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
-                }).then(_ => {
-                    bgPage.updateLiveStream(); // update
-                    showMessage('saved');
+            // if not data, reset configs
+            if (!followerLoginId) {
+                return storageSetPromise({
+                    [KEY_FOLLOWER_ID]: null,
+                    [KEY_FOLLOWER_LOGIN_ID]: null,
                 })
             }
+
+            // Get user id using login id and save it
+            bgPage.getUserInfos([followerLoginId]).then(userInfos => {
+                if (userInfos.length === 0) {
+                    // 등록한 아이디가 존재하지 않는 경우
+                    showMessage('User does not exist', 'error');
+                } else {
+                    storageSetPromise({
+                        [KEY_FOLLOWER_ID]: userInfos[0].id, // follower id
+                        [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
+                    }).then(_ => {
+                        bgPage.updateLiveStream(); // update
+                        showMessage('saved');
+                    })
+                }
+            })
         })
     })
 }
