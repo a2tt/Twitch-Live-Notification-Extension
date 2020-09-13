@@ -25,12 +25,12 @@ function twitchLoginHandler() {
                                 [KEY_FOLLOWER_ID]: UserInfos[0].id,
                                 [KEY_FOLLOWER_LOGIN_ID]: UserInfos[0].login,
                             }).then(_ => {
-                                chrome.runtime.sendMessage({'name': 'updateLiveStream'});
+                                chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
                                 window.location.href = chrome.extension.getURL('option.html');
                             })
                         })
                     } else {
-                        chrome.runtime.sendMessage({'name': 'updateLiveStream'});
+                        chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
                         window.location.href = chrome.extension.getURL('option.html');
                     }
                 })
