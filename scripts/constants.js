@@ -2,12 +2,12 @@
 let TWITCH_CLIENT_ID = 's1rfeomm030qieexrb8yuxa5z4ae2m'
 
 // storage key
-let KEY_TWITCH_TOKEN = 'twitchToken'
-let KEY_FOLLOWER_LOGIN_ID = 'followerLoginId'
-let KEY_FOLLOWER_ID = 'followerId'
-let KEY_LIVE_STREAM = 'liveStream'
-let KEY_UPDATE_TS = 'updatedAt'
+let KEY_TWITCH_TOKEN = 'KEY_TWITCH_TOKEN'
+let KEY_FOLLOWER_LOGIN_ID = 'KEY_FOLLOWER_LOGIN_ID'
+let KEY_FOLLOWER_ID = 'KEY_FOLLOWER_ID'
+let KEY_LIVE_STREAM = 'KEY_LIVE_STREAM'
+let KEY_UPDATE_TS = 'KEY_UPDATE_TS'
 
 // event name
-let EVENT_UPDATE_LIVE_STREAM = 'updateLiveStream'
-let EVENT_REFRESHED = 'refreshed'
+let EVENT_UPDATE_LIVE_STREAM = 'EVENT_UPDATE_LIVE_STREAM'
+let EVENT_REFRESHED = 'EVENT_REFRESHED'
