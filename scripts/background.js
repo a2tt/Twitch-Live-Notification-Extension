@@ -210,7 +210,7 @@ function updateLiveStream() {
  */
 function _setLiveStream(liveStreams) {
     // save on storage
-    storageGetPromise([KEY_LIVE_STREAM]).then(storage => {
+    storageGetPromise([KEY_LIVE_STREAM, KEY_UPDATE_TS]).then(storage => {
         // check new streams
         let prevUserLogin = storage[KEY_LIVE_STREAM].map(item => item.user_name);
         let currUserLogin = liveStreams.map(item => item.user_name);
@@ -221,7 +221,7 @@ function _setLiveStream(liveStreams) {
             }
         })
         // chrome noti if new streams
-        if (newStreams.length) notifyNewStream(newStreams);
+        if (newStreams.length) notifyNewStream(newStreams, storage[KEY_UPDATE_TS]);
 
         // save
         storageSetPromise({
@@ -237,10 +237,20 @@ function _setLiveStream(liveStreams) {
 
 /**
  * @param {Array} newStreams
+ * @param {String} prevUpdatedAt
  */
-function notifyNewStream(newStreams) {
-    let message = `${newStreams.join(', ')} is streaming.`
-    notify(message);
+function notifyNewStream(newStreams, prevUpdatedAt) {
+    const LIMIT = 4;
+    let prev = new Date(prevUpdatedAt);
+    let diff_ms = (new Date()) - prev;
+
+    let tempMessage = newStreams.slice(0, LIMIT).join(', ');
+    let foo = newStreams.length >= LIMIT ? tempMessage + ' ...' : tempMessage;
+    // 연속해서 체크한 경우만. 브라우저를 새로 키는 등의 상황 제외
+    if (parseInt(diff_ms / 1000 / 60) <= REFRESH_INTERVAL_MIN * 2) {
+        let message = `${foo} is streaming.`
+        notify(message);
+    }
 }
 
 /**
@@ -292,7 +302,7 @@ window.onload = function () {
 
     chrome.alarms.create(EVENT_UPDATE_LIVE_STREAM, {
         when: 1000, // Initial execution after 1 second
-        periodInMinutes: 1, // every n minutes
+        periodInMinutes: REFRESH_INTERVAL_MIN, // every n minutes
     })
 
     chrome.alarms.onAlarm.addListener(eventHandler);
