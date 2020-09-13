@@ -210,9 +210,9 @@ function updateLiveStream() {
  */
 function _setLiveStream(liveStreams) {
     // save on storage
-    storageGetPromise([KEY_LIVE_STREAM]).then(res => {
+    storageGetPromise([KEY_LIVE_STREAM]).then(storage => {
         // check new streams
-        let prevUserLogin = res[KEY_LIVE_STREAM].map(item => item.user_name);
+        let prevUserLogin = storage[KEY_LIVE_STREAM].map(item => item.user_name);
         let currUserLogin = liveStreams.map(item => item.user_name);
         let newStreams = []
         currUserLogin.forEach(userLogin => {
@@ -227,7 +227,7 @@ function _setLiveStream(liveStreams) {
         storageSetPromise({
             [KEY_LIVE_STREAM]: liveStreams,
             [KEY_UPDATE_TS]: new Date().toISOString(),
-        }).then(res => {
+        }).then(_ => {
             chrome.browserAction.setBadgeBackgroundColor({color: [141, 75, 255, 255]});
             chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
             chrome.runtime.sendMessage({'name': EVENT_REFRESHED});
@@ -247,12 +247,17 @@ function notifyNewStream(newStreams) {
  * @param {String} message
  */
 function notify(message) {
-    chrome.notifications.create({
-        type: "basic",
-        title: "New live stream",
-        message: message,
-        iconUrl: "/images/icon_128.png",
-    });
+    storageGetPromise([KEY_NOTIFICATION]).then(storage => {
+        if (storage[KEY_NOTIFICATION]) {
+            chrome.notifications.create({
+                type: "basic",
+                title: "New live stream",
+                message: message,
+                iconUrl: "/images/icon_128.png",
+            });
+        }
+    })
+
 }
 
 /**
@@ -265,7 +270,26 @@ function eventHandler(data) {
     }
 }
 
+/**
+ * Set storage on install or on update
+ */
+function onInstall() {
+    chrome.runtime.onInstalled.addListener(details => {
+        if (details.reason === "install") {
+            storageGetPromise([KEY_LIVE_STREAM, KEY_NOTIFICATION]).then(storage => {
+                let defaultStorage = {}
+                if (!storage[KEY_LIVE_STREAM]) defaultStorage[KEY_LIVE_STREAM] = [];
+                if (!storage[KEY_NOTIFICATION]) defaultStorage[KEY_NOTIFICATION] = false;
+
+                storageSetPromise(defaultStorage);
+            })
+        }
+    })
+}
+
 window.onload = function () {
+    onInstall();
+
     chrome.alarms.create(EVENT_UPDATE_LIVE_STREAM, {
         when: 1000, // Initial execution after 1 second
         periodInMinutes: 1, // every n minutes

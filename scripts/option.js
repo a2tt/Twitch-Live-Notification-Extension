@@ -16,15 +16,15 @@ function twitchLoginHandler() {
             }).then(_ => {
                 // get follower config
                 storageGetPromise([KEY_FOLLOWER_ID, KEY_FOLLOWER_LOGIN_ID]
-                ).then(res => {
+                ).then(storage => {
                     // if follower id is not configured, set my account's info
-                    if (!res[KEY_FOLLOWER_ID] || !res[KEY_FOLLOWER_LOGIN_ID]) {
+                    if (!storage[KEY_FOLLOWER_ID] || !storage[KEY_FOLLOWER_LOGIN_ID]) {
                         // 로그인 한 유저의 정보로 데이터 초기 세팅
                         bgPage.getMyInfo().then(UserInfos => {
                             storageSetPromise({
                                 [KEY_FOLLOWER_ID]: UserInfos[0].id,
                                 [KEY_FOLLOWER_LOGIN_ID]: UserInfos[0].login,
-                            }).then(res => {
+                            }).then(_ => {
                                 chrome.runtime.sendMessage({'name': 'updateLiveStream'});
                                 window.location.href = chrome.extension.getURL('option.html');
                             })
@@ -46,20 +46,16 @@ function initUi() {
     let followerIdInput = window.document.getElementById('follower-login-id');
     let loginBtn = window.document.getElementById('login-btn');
     let logoutBtn = window.document.getElementById('logout-btn');
+    let notificationBox = window.document.getElementById('notification');
 
-    storageGetPromise([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN]
+    storageGetPromise([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN, KEY_NOTIFICATION]
     ).then(storage => {
-        console.log(storage[KEY_FOLLOWER_LOGIN_ID])
-        console.log(storage[KEY_FOLLOWER_ID])
-        console.log(storage[KEY_TWITCH_TOKEN])
-        if (storage[KEY_FOLLOWER_LOGIN_ID]) {
-            followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
-        }
-        if (storage[KEY_TWITCH_TOKEN]) {
-            logoutBtn.style.display = 'block';
-        } else {
-            loginBtn.style.display = 'block';
-        }
+        if (storage[KEY_FOLLOWER_LOGIN_ID]) followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
+
+        if (storage[KEY_TWITCH_TOKEN]) logoutBtn.style.display = 'block';
+        else loginBtn.style.display = 'block';
+
+        notificationBox.checked = storage[KEY_NOTIFICATION];
     })
 }
 
@@ -85,8 +81,13 @@ function eventBinding() {
     optionForm.addEventListener('submit', function (e) {
         e.preventDefault();
         let followerLoginId = e.currentTarget['follower-login-id'].value;
+        let notification = e.currentTarget['notification'].checked;
+
+        storageSetPromise({
+            [KEY_NOTIFICATION]: notification,
+        })
+        // if not data, reset configs
         if (!followerLoginId) {
-            // if not data, reset configs
             storageSetPromise({
                 [KEY_FOLLOWER_ID]: null,
                 [KEY_FOLLOWER_LOGIN_ID]: null,

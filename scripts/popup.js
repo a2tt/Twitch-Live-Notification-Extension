@@ -1,40 +1,54 @@
+/**
+ * check whether required configs exist
+ * @returns {Promise<Boolean>}
+ */
+function checkConfigs() {
+    return storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(storage => {
+        return Boolean(storage[KEY_TWITCH_TOKEN] && storage[KEY_FOLLOWER_LOGIN_ID] && storage[KEY_FOLLOWER_ID]);
+    })
+}
+
 var updateCheckInterval = null
 
+/**
+ * on click refresh button
+ * @param e
+ */
 function onClickRefreshBtn(e) {
-    storageGetPromise([KEY_UPDATE_TS]).then(res => {
-        // send update request
-        chrome.runtime.sendMessage({'name': 'updateLiveStream'});
+    checkConfigs().then(status => {
+        if (!status) return;
+        storageGetPromise([KEY_UPDATE_TS]).then(res => {
+            // send update request
+            chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
 
-        let beforeTs = res[KEY_UPDATE_TS];
-        clearInterval(updateCheckInterval);
-        e.target.classList.add('spinning');
-        // check refreshing
-        updateCheckInterval = setInterval(_ => {
-            storageGetPromise([KEY_UPDATE_TS]).then(res => {
-                // if refreshed
-                if (beforeTs !== res[KEY_UPDATE_TS]) {
-                    clearInterval(updateCheckInterval);
-                    createUI();
-                    e.target.classList.remove('spinning');
-                }
-            })
-        }, 500)
+            let beforeTs = res[KEY_UPDATE_TS];
+            clearInterval(updateCheckInterval);
+            e.target.classList.add('spinning');
+            // check refreshing
+            updateCheckInterval = setInterval(_ => {
+                storageGetPromise([KEY_UPDATE_TS]).then(res => {
+                    // if refreshed
+                    if (beforeTs !== res[KEY_UPDATE_TS]) {
+                        clearInterval(updateCheckInterval);
+                        createUI();
+                        e.target.classList.remove('spinning');
+                    }
+                })
+            }, 500)
+        })
     })
-
 }
 
 /**
- * check whether required configs exist
+ * if configs are not set, show 'login required' message
  */
-function checkConfig() {
-    storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(res => {
-        // if configs are not set, show 'login required' message
-        if (!(res[KEY_TWITCH_TOKEN] && res[KEY_FOLLOWER_LOGIN_ID] && res[KEY_FOLLOWER_ID])) {
+function loginRequired() {
+    checkConfigs().then(status => {
+        if (!status) {
+            let container = document.getElementById('container');
             let loginRequiredElem = document.createElement('div')
             loginRequiredElem.className = 'login-required';
-            loginRequiredElem.innerHTML = `
-            Twitch login required. <a href="${chrome.extension.getURL('option.html')}" target="_blank">option</a>
-            `;
+            loginRequiredElem.innerHTML = `Twitch login required. <a href="${chrome.extension.getURL('option.html')}" target="_blank">option</a>`;
             container.appendChild(loginRequiredElem);
         }
     })
@@ -126,7 +140,7 @@ function eventHandler(data) {
 }
 
 window.onload = function () {
-    checkConfig();
+    loginRequired();
     createUI();
 
     let refreshBtn = document.getElementById('refresh-btn');

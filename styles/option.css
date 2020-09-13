@@ -33,6 +33,10 @@ input::placeholder {
     color: #777;
 }
 
+input[type='checkbox'] {
+    margin: 10px;
+}
+
 .option-form {
     padding: 20px 4px;
     max-width: 500px;
