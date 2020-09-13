@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Twatcher",
+  "name": "Twitch Stream I Follow",
   "version": "0.0.1",
-  "description": "Twitch helper. List twitch streamers on live broadcast I follow",
+  "description": "Show twitch streamers on live I follow",
   "permissions": [
     "storage",
     "alarms",
