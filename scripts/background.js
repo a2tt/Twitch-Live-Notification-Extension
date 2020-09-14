@@ -276,7 +276,7 @@ function notify(message) {
  */
 function eventHandler(data) {
     if (data.name === EVENT_UPDATE_LIVE_STREAM) {
-        updateLiveStream()
+        updateLiveStream();
     }
 }
 
