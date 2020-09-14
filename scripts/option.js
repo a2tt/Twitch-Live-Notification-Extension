@@ -1,9 +1,28 @@
+/**
+ * initialize option UI
+ */
+function initUi() {
+    let followerIdInput = window.document.getElementById('follower-login-id');
+    let loginBtn = window.document.getElementById('login-btn');
+    let logoutBtn = window.document.getElementById('logout-btn');
+    let notificationBox = window.document.getElementById('notification');
+
+    storageGetPromise([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN, KEY_NOTIFICATION]
+    ).then(storage => {
+        if (storage[KEY_FOLLOWER_LOGIN_ID]) followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
+
+        if (storage[KEY_TWITCH_TOKEN]) logoutBtn.style.display = 'block';
+        else loginBtn.style.display = 'block';
+
+        notificationBox.checked = storage[KEY_NOTIFICATION];
+    })
+}
 
 /**
  * On twitch oauth login and redirected, set access_token from url hash
+ * @param {Window} bgPage
  */
-function twitchLoginHandler() {
-    let bgPage = chrome.extension.getBackgroundPage(); // background script's `window`
+function twitchLoginHandler(bgPage) {
     // 로그인 처리 후, 데이터 저장
     let urlHash = window.location.hash
     if (urlHash) {
@@ -40,27 +59,10 @@ function twitchLoginHandler() {
 }
 
 /**
- * initialize option UI
+ * EventBinding
+ * @param {Window} bgPage
  */
-function initUi() {
-    let followerIdInput = window.document.getElementById('follower-login-id');
-    let loginBtn = window.document.getElementById('login-btn');
-    let logoutBtn = window.document.getElementById('logout-btn');
-    let notificationBox = window.document.getElementById('notification');
-
-    storageGetPromise([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN, KEY_NOTIFICATION]
-    ).then(storage => {
-        if (storage[KEY_FOLLOWER_LOGIN_ID]) followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
-
-        if (storage[KEY_TWITCH_TOKEN]) logoutBtn.style.display = 'block';
-        else loginBtn.style.display = 'block';
-
-        notificationBox.checked = storage[KEY_NOTIFICATION];
-    })
-}
-
-function eventBinding() {
-    let bgPage = chrome.extension.getBackgroundPage(); // background script's `window`
+function eventBinding(bgPage) {
     let loginBtn = window.document.getElementById('login-btn');
     let logoutBtn = window.document.getElementById('logout-btn');
 
@@ -144,9 +146,10 @@ function showMessage(message, type = 'info') {
 }
 
 window.onload = function () {
-    twitchLoginHandler();
-
     initUi();
 
-    eventBinding();
+    chrome.runtime.getBackgroundPage(bgPage => {
+        twitchLoginHandler(bgPage);
+        eventBinding(bgPage);
+    })
 }
