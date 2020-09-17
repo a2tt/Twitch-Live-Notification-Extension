@@ -212,7 +212,7 @@ function _setLiveStream(liveStreams) {
     // save on storage
     storageGetPromise([KEY_LIVE_STREAM, KEY_UPDATE_TS]).then(storage => {
         // check new streams
-        let prevUserLogin = storage[KEY_LIVE_STREAM].map(item => item.user_name);
+        let prevUserLogin = (storage[KEY_LIVE_STREAM] || []).map(item => item.user_name);
         let currUserLogin = liveStreams.map(item => item.user_name);
         let newStreams = []
         currUserLogin.forEach(userLogin => {
