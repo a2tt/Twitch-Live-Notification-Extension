@@ -44,6 +44,15 @@ body {
     padding: 3px;
 }
 
+body[theme="dark"] {
+    --bg-color: #2d2d2d;
+    --text-color: #ccc;
+    --input-bg: #ccc;
+
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
 body::-webkit-scrollbar {
     width: 0.4em;
 }

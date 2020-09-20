@@ -67,12 +67,18 @@ function createUI() {
     */
     let container = document.getElementById('container');
     container.innerHTML = '';
-    storageGetPromise([KEY_LIVE_STREAM, KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(res => {
-        // only if configs are set all
-        if (res[KEY_TWITCH_TOKEN] && res[KEY_FOLLOWER_LOGIN_ID] && res[KEY_FOLLOWER_ID]) {
+    storageGetPromise([KEY_DARK_MODE, KEY_LIVE_STREAM, KEY_TWITCH_TOKEN,
+        KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(storage => {
+        // dark mode
+        if (storage[KEY_DARK_MODE]) {
+            document.body.setAttribute('theme', 'dark');
+        }
+
+        // only if configs are set all, create UI
+        if (storage[KEY_TWITCH_TOKEN] && storage[KEY_FOLLOWER_LOGIN_ID] && storage[KEY_FOLLOWER_ID]) {
             // group by game name
             let gameGroup = {};
-            for (let s of res[KEY_LIVE_STREAM]) {
+            for (let s of storage[KEY_LIVE_STREAM]) {
                 if (!gameGroup.hasOwnProperty(s.game_name))
                     gameGroup[s.game_name] = [];
                 gameGroup[s.game_name].push(s);

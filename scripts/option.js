@@ -7,8 +7,14 @@ function initUi() {
     let logoutBtn = window.document.getElementById('logout-btn');
     let notificationBox = window.document.getElementById('notification');
 
-    storageGetPromise([KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN, KEY_NOTIFICATION]
+    storageGetPromise([KEY_DARK_MODE, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN, KEY_NOTIFICATION]
     ).then(storage => {
+        // dark mode
+        if (storage[KEY_DARK_MODE]) {
+            document.body.setAttribute('theme', 'dark');
+            document.getElementById('dark-mode').checked = true;
+        }
+
         if (storage[KEY_FOLLOWER_LOGIN_ID]) followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
 
         if (storage[KEY_TWITCH_TOKEN]) logoutBtn.style.display = 'block';
@@ -82,7 +88,8 @@ function eventBinding(bgPage) {
     let optionForm = document.getElementsByClassName('option-form')[0];
     optionForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID]).then(storage => {
+        storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID,
+            KEY_NOTIFICATION, KEY_DARK_MODE]).then(storage => {
             // if the token has not set, return
             if (!storage[KEY_TWITCH_TOKEN]) {
                 return showMessage('Login required.', 'error');
@@ -90,11 +97,17 @@ function eventBinding(bgPage) {
 
             let followerLoginId = e.target['follower-login-id'].value;
             let notification = e.target['notification'].checked;
+            let darkMode = e.target['dark-mode'].checked;
 
             storageSetPromise({
                 [KEY_NOTIFICATION]: notification,
+                [KEY_DARK_MODE]: darkMode,
             }).then(_ => {
-                showMessage('Notification option saved');
+                if (storage[KEY_NOTIFICATION] !== notification) showMessage('Notification option saved');
+                if (storage[KEY_DARK_MODE] !== darkMode) {
+                    showMessage('Dark mode option saved');
+                    window.location.reload();
+                }
             })
 
             // if not data, reset configs
