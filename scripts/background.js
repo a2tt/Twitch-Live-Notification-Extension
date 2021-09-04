@@ -278,7 +278,7 @@ function notify(message) {
  */
 async function twitchLoginHandler(redirectUri, sendResponse) {
     // 로그인 처리 후, 데이터 저장
-    let urlHash = redirectUri.split('#')[1]
+    let urlHash = redirectUri && redirectUri.split('#')[1]
     if (urlHash) {
         let params = new URLSearchParams(urlHash);
         let access_token = params.get('access_token')
