@@ -25,46 +25,6 @@ function initUi() {
 }
 
 /**
- * On twitch oauth login and redirected, set access_token from url hash
- * @param {Window} bgPage
- */
-function twitchLoginHandler(bgPage) {
-    // 로그인 처리 후, 데이터 저장
-    let urlHash = window.location.hash
-    if (urlHash) {
-        let params = new URLSearchParams(urlHash.substring(1)); // chrome-extension://.../option.html#access_token=...
-        let access_token = params.get('access_token')
-        if (access_token) {
-            // save access token
-            storageSetPromise({
-                [KEY_TWITCH_TOKEN]: access_token
-            }).then(_ => {
-                // get follower config
-                storageGetPromise([KEY_FOLLOWER_ID, KEY_FOLLOWER_LOGIN_ID]
-                ).then(storage => {
-                    // if follower id is not configured, set my account's info
-                    if (!storage[KEY_FOLLOWER_ID] || !storage[KEY_FOLLOWER_LOGIN_ID]) {
-                        // 로그인 한 유저의 정보로 데이터 초기 세팅
-                        bgPage.getMyInfo().then(UserInfos => {
-                            storageSetPromise({
-                                [KEY_FOLLOWER_ID]: UserInfos[0].id,
-                                [KEY_FOLLOWER_LOGIN_ID]: UserInfos[0].login,
-                            }).then(_ => {
-                                chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
-                                window.location.href = chrome.extension.getURL('option.html');
-                            })
-                        })
-                    } else {
-                        chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
-                        window.location.href = chrome.extension.getURL('option.html');
-                    }
-                })
-            })
-        }
-    }
-}
-
-/**
  * EventBinding
  * @param {Window} bgPage
  */
@@ -74,9 +34,13 @@ function eventBinding(bgPage) {
 
     // login button binding
     loginBtn.addEventListener('click', e => {
-        let redirectUri = chrome.extension.getURL('option.html');
-        this.loginUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${TWITCH_CLIENT_ID}&redirect_uri=${redirectUri}&scope=openid+user:read:email`
-        window.location.href = this.loginUrl;
+        chrome.runtime.sendMessage({ name: EVENT_LOGIN }, ({message}) => {
+            if (message === 'success') {
+                window.location.reload();
+            } else {
+                showMessage('Login failed', 'error');
+            }
+        });
     })
 
     // logout button binding
@@ -162,7 +126,6 @@ window.onload = function () {
     initUi();
 
     chrome.runtime.getBackgroundPage(bgPage => {
-        twitchLoginHandler(bgPage);
         eventBinding(bgPage);
     })
 }

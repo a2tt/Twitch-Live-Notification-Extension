@@ -1,13 +1,14 @@
 {
   "manifest_version": 2,
   "name": "Twitch Live Notification",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Get notified of new twitch live broadcast you're following",
   "permissions": [
     "storage",
     "alarms",
     "tabs",
-    "notifications"
+    "notifications",
+    "identity"
   ],
   "browser_action": {
     "default_icon": "/images/icon_16.png",
@@ -31,5 +32,6 @@
   "web_accessible_resources": [
     "images/*.png",
     "option.html"
-  ]
+  ],
+  "content_security_policy": "script-src 'self' https://apis.google.com https://www.gstatic.com https://www.googleapis.com https://securetoken.googleapis.com; object-src 'self'"
 }

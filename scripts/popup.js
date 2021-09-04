@@ -122,7 +122,7 @@ function createUI() {
  * @param {String} prevTs
  * @returns {number}
  */
-function timeDiff(prevTs) {
+function calcTimeDiff(prevTs) {
     let prev = new Date(prevTs);
     let diff_ms = (new Date()) - prev;
     return parseInt(diff_ms / 1000 / 60);
@@ -135,7 +135,10 @@ function updateTs() {
     let updatedAt = document.getElementById('updated-at');
     storageGetPromise([KEY_UPDATE_TS]
     ).then(storage => {
-        updatedAt.innerText = `🕗${timeDiff(storage[KEY_UPDATE_TS])}min ago`;
+        let timeDiff = calcTimeDiff(storage[KEY_UPDATE_TS])
+        if (timeDiff >= 5) {
+            updatedAt.innerText = `🕗Updated ${timeDiff}min ago`;
+        }
     })
 }
 

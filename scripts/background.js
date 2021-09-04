@@ -271,13 +271,63 @@ function notify(message) {
 }
 
 /**
- * onAlarm + onMessage handler
- * @param data
+ * On twitch login and redirected, set access_token from url hash
+ * @param {String} redirectUri: redirected uri after twitch login (ex. <scheme>://<domain>/<path>#access_token=...)
+ * @param {chrome.runtime.sendMessage} sendResponse:
+ * @returns {void}
  */
-function eventHandler(data) {
-    if (data.name === EVENT_UPDATE_LIVE_STREAM) {
-        updateLiveStream();
+async function twitchLoginHandler(redirectUri, sendResponse) {
+    // 로그인 처리 후, 데이터 저장
+    let urlHash = redirectUri.split('#')[1]
+    if (urlHash) {
+        let params = new URLSearchParams(urlHash);
+        let access_token = params.get('access_token')
+        if (access_token) {
+            // save access token
+            await storageSetPromise({[KEY_TWITCH_TOKEN]: access_token})
+
+            // get follower config
+            let storage = await storageGetPromise([KEY_FOLLOWER_ID, KEY_FOLLOWER_LOGIN_ID])
+
+            // if follower id is not configured, set my account's info
+            if (!storage[KEY_FOLLOWER_ID] || !storage[KEY_FOLLOWER_LOGIN_ID]) {
+                // set initial data using user's information
+                let userInfos = await getMyInfo()
+
+                await storageSetPromise({
+                    [KEY_FOLLOWER_ID]: userInfos[0].id,
+                    [KEY_FOLLOWER_LOGIN_ID]: userInfos[0].login,
+                })
+            }
+            chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
+            sendResponse({message: 'success'})
+        }
+    } else {
+        sendResponse({message: 'fail'})
     }
+}
+
+
+/**
+ * onAlarm + onMessage handler
+ * @param message
+ * @param sender
+ * @param sendResponse
+ */
+function eventHandler(message, sender, sendResponse) {
+    if (message.name === EVENT_UPDATE_LIVE_STREAM) {
+        updateLiveStream();
+    } else if (message.name === EVENT_LOGIN) {
+        let redirectUri = encodeURI(`https://${EXTENSION_ID}.chromiumapp.org`);
+        let twitchOauthUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${TWITCH_CLIENT_ID}&redirect_uri=${redirectUri}&scope=openid+user:read:email`
+        chrome.identity.launchWebAuthFlow({
+            url: twitchOauthUrl,
+            interactive: true
+        }, function (redirectUri) {
+            twitchLoginHandler(redirectUri, sendResponse)
+        });
+    }
+    return true;
 }
 
 /**
