@@ -3,7 +3,7 @@ const REFRESH_INTERVAL_MIN = 2; // in minutes
 
 // credentials
 const EXTENSION_ID = chrome.runtime.id; // chrome extension id
-const TWITCH_CLIENT_ID = '8uwlqri9qroqh3yda5jbjyjmhuzdcg';  // 0.1.0
+const TWITCH_CLIENT_ID = 's1rfeomm030qieexrb8yuxa5z4ae2m';
 
 // storage key
 const KEY_TWITCH_TOKEN = 'KEY_TWITCH_TOKEN';
