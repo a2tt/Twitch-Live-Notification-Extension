@@ -1,3 +1,8 @@
+import {storageSetPromise, storageGetPromise, storageClearCredential} from "./storage";
+import * as constants from "./constants";
+import '../css/option.css';
+import {getUserInfos} from "./twitch";
+
 /**
  * initialize option UI
  */
@@ -7,34 +12,36 @@ function initUi() {
     let logoutBtn = window.document.getElementById('logout-btn');
     let notificationBox = window.document.getElementById('notification');
 
-    storageGetPromise([KEY_DARK_MODE, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID, KEY_TWITCH_TOKEN, KEY_NOTIFICATION]
-    ).then(storage => {
+    storageGetPromise([
+            constants.KEY_DARK_MODE, constants.KEY_FOLLOWER_LOGIN_ID,
+            constants.KEY_FOLLOWER_ID, constants.KEY_TWITCH_TOKEN, constants.KEY_NOTIFICATION
+        ])
+        .then(storage => {
         // dark mode
-        if (storage[KEY_DARK_MODE]) {
+        if (storage[constants.KEY_DARK_MODE]) {
             document.body.setAttribute('theme', 'dark');
             document.getElementById('dark-mode').checked = true;
         }
 
-        if (storage[KEY_FOLLOWER_LOGIN_ID]) followerIdInput.value = storage[KEY_FOLLOWER_LOGIN_ID];
+        if (storage[constants.KEY_FOLLOWER_LOGIN_ID]) followerIdInput.value = storage[constants.KEY_FOLLOWER_LOGIN_ID];
 
-        if (storage[KEY_TWITCH_TOKEN]) logoutBtn.style.display = 'block';
+        if (storage[constants.KEY_TWITCH_TOKEN]) logoutBtn.style.display = 'block';
         else loginBtn.style.display = 'block';
 
-        notificationBox.checked = storage[KEY_NOTIFICATION];
+        notificationBox.checked = storage[constants.KEY_NOTIFICATION];
     })
 }
 
 /**
  * EventBinding
- * @param {Window} bgPage
  */
-function eventBinding(bgPage) {
+function eventBinding() {
     let loginBtn = window.document.getElementById('login-btn');
     let logoutBtn = window.document.getElementById('logout-btn');
 
     // login button binding
     loginBtn.addEventListener('click', e => {
-        chrome.runtime.sendMessage({ name: EVENT_LOGIN }, ({message}) => {
+        chrome.runtime.sendMessage({name: constants.EVENT_LOGIN}, ({message}) => {
             if (message === 'success') {
                 window.location.reload();
             } else {
@@ -52,10 +59,10 @@ function eventBinding(bgPage) {
     let optionForm = document.getElementsByClassName('option-form')[0];
     optionForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID,
-            KEY_NOTIFICATION, KEY_DARK_MODE]).then(storage => {
+        storageGetPromise([constants.KEY_TWITCH_TOKEN, constants.KEY_FOLLOWER_LOGIN_ID,
+            constants.KEY_NOTIFICATION, constants.KEY_DARK_MODE]).then(storage => {
             // if the token has not set, return
-            if (!storage[KEY_TWITCH_TOKEN]) {
+            if (!storage[constants.KEY_TWITCH_TOKEN]) {
                 return showMessage('Login required.', 'error');
             }
 
@@ -64,11 +71,11 @@ function eventBinding(bgPage) {
             let darkMode = e.target['dark-mode'].checked;
 
             storageSetPromise({
-                [KEY_NOTIFICATION]: notification,
-                [KEY_DARK_MODE]: darkMode,
+                [constants.KEY_NOTIFICATION]: notification,
+                [constants.KEY_DARK_MODE]: darkMode,
             }).then(_ => {
-                if (storage[KEY_NOTIFICATION] !== notification) showMessage('Notification option saved');
-                if (storage[KEY_DARK_MODE] !== darkMode) {
+                if (storage[constants.KEY_NOTIFICATION] !== notification) showMessage('Notification option saved');
+                if (storage[constants.KEY_DARK_MODE] !== darkMode) {
                     showMessage('Dark mode option saved');
                     window.location.reload();
                 }
@@ -77,23 +84,23 @@ function eventBinding(bgPage) {
             // if not data, reset configs
             if (!followerLoginId) {
                 return storageSetPromise({
-                    [KEY_FOLLOWER_ID]: null,
-                    [KEY_FOLLOWER_LOGIN_ID]: null,
+                    [constants.KEY_FOLLOWER_ID]: null,
+                    [constants.KEY_FOLLOWER_LOGIN_ID]: null,
                 })
             }
 
-            if (storage[KEY_FOLLOWER_LOGIN_ID] !== followerLoginId) {
+            if (storage[constants.KEY_FOLLOWER_LOGIN_ID] !== followerLoginId) {
                 // Get user id using login id and save it
-                bgPage.getUserInfos([followerLoginId]).then(userInfos => {
+                getUserInfos([followerLoginId]).then(userInfos => {
                     if (userInfos.length === 0) {
                         // 등록한 아이디가 존재하지 않는 경우
                         showMessage('User does not exist', 'error');
                     } else {
                         storageSetPromise({
-                            [KEY_FOLLOWER_ID]: userInfos[0].id, // follower id
-                            [KEY_FOLLOWER_LOGIN_ID]: followerLoginId
+                            [constants.KEY_FOLLOWER_ID]: userInfos[0].id, // follower id
+                            [constants.KEY_FOLLOWER_LOGIN_ID]: followerLoginId
                         }).then(_ => {
-                            chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
+                            chrome.runtime.sendMessage({'name': constants.EVENT_UPDATE_LIVE_STREAM});
                             showMessage('Follower ID saved');
                         })
                     }
@@ -124,8 +131,5 @@ function showMessage(message, type = 'info') {
 
 window.onload = function () {
     initUi();
-
-    chrome.runtime.getBackgroundPage(bgPage => {
-        eventBinding(bgPage);
-    })
+    eventBinding();
 }

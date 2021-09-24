@@ -1,9 +1,11 @@
+import {KEY_TWITCH_TOKEN} from "./constants";
+
 /**
  * clear credentials
  *
  * @returns {Promise<void>}
  */
-function storageClearCredential() {
+export function storageClearCredential() {
     return new Promise((resolve, reject) => {
         chrome.storage.local.set({
             [KEY_TWITCH_TOKEN]: null,
@@ -17,7 +19,7 @@ function storageClearCredential() {
  * @param {Array} key
  * @returns {Promise<Object>}
  */
-function storageGetPromise(key) {
+export function storageGetPromise(key) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.get(key, (res) => {
             resolve(res);
@@ -29,7 +31,7 @@ function storageGetPromise(key) {
  * @param {Object} obj
  * @returns {Promise<Object>}
  */
-function storageSetPromise(obj) {
+export function storageSetPromise(obj) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.set(obj, () => {
             resolve();

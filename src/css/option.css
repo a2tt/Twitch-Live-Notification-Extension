@@ -17,6 +17,7 @@ body {
     --purple-border: rgb(145,71,255);
     --purple: #772ce8;
     --input-bg: #eee;
+    --max-width: 500px;
 }
 
 body[theme="dark"] {
@@ -63,7 +64,8 @@ input[type='checkbox'] {
 }
 
 .option-form {
-    max-width: 500px;
+    margin: 0 auto;
+    max-width: var(--max-width);
 }
 
 .option-form .game-group {
@@ -107,7 +109,8 @@ input[type='checkbox'] {
 }
 
 #message-container {
-    margin: 10px 10px;
+    margin: 10px auto;
+    max-width: var(--max-width);
 }
 
 .message.error {

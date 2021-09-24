@@ -1,10 +1,18 @@
+import '@fortawesome/fontawesome-free/js/fontawesome';
+import '@fortawesome/fontawesome-free/js/solid';
+
+import {storageGetPromise} from "./storage";
+import * as constants from "./constants";
+import '../css/popup.css';
+
+
 /**
  * check whether required configs exist
  * @returns {Promise<Boolean>}
  */
 function checkConfigs() {
-    return storageGetPromise([KEY_TWITCH_TOKEN, KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(storage => {
-        return Boolean(storage[KEY_TWITCH_TOKEN] && storage[KEY_FOLLOWER_LOGIN_ID] && storage[KEY_FOLLOWER_ID]);
+    return storageGetPromise([constants.KEY_TWITCH_TOKEN, constants.KEY_FOLLOWER_LOGIN_ID, constants.KEY_FOLLOWER_ID]).then(storage => {
+        return Boolean(storage[constants.KEY_TWITCH_TOKEN] && storage[constants.KEY_FOLLOWER_LOGIN_ID] && storage[constants.KEY_FOLLOWER_ID]);
     })
 }
 
@@ -15,26 +23,28 @@ var updateCheckInterval = null
  * @param e
  */
 function onClickRefreshBtn(e) {
+    e.stopPropagation();
     checkConfigs().then(status => {
         if (!status) return;
-        storageGetPromise([KEY_UPDATE_TS]).then(res => {
+        storageGetPromise([constants.KEY_UPDATE_TS]).then(res => {
             // send update request
-            chrome.runtime.sendMessage({'name': EVENT_UPDATE_LIVE_STREAM});
+            chrome.runtime.sendMessage({'name': constants.EVENT_UPDATE_LIVE_STREAM});
 
-            let beforeTs = res[KEY_UPDATE_TS];
+            let beforeTs = res[constants.KEY_UPDATE_TS];
             clearInterval(updateCheckInterval);
             e.target.classList.add('spinning');
+            console.log(e.target)
             // check refreshing
             updateCheckInterval = setInterval(_ => {
-                storageGetPromise([KEY_UPDATE_TS]).then(res => {
+                storageGetPromise([constants.KEY_UPDATE_TS]).then(res => {
                     // if refreshed
-                    if (beforeTs !== res[KEY_UPDATE_TS]) {
+                    if (beforeTs !== res[constants.KEY_UPDATE_TS]) {
                         clearInterval(updateCheckInterval);
                         createUI();
                         e.target.classList.remove('spinning');
                     }
                 })
-            }, 500)
+            }, 1000)
         })
     })
 }
@@ -48,7 +58,7 @@ function loginRequired() {
             let container = document.getElementById('container');
             let loginRequiredElem = document.createElement('div')
             loginRequiredElem.className = 'login-required';
-            loginRequiredElem.innerHTML = `Twitch login required. <a href="${chrome.extension.getURL('option.html')}" target="_blank">option</a>`;
+            loginRequiredElem.innerHTML = `Twitch login required. <a href="${chrome.extension.getURL('options.html')}" target="_blank">option</a>`;
             container.appendChild(loginRequiredElem);
         }
     })
@@ -67,18 +77,18 @@ function createUI() {
     */
     let container = document.getElementById('container');
     container.innerHTML = '';
-    storageGetPromise([KEY_DARK_MODE, KEY_LIVE_STREAM, KEY_TWITCH_TOKEN,
-        KEY_FOLLOWER_LOGIN_ID, KEY_FOLLOWER_ID]).then(storage => {
+    storageGetPromise([constants.KEY_DARK_MODE, constants.KEY_LIVE_STREAM, constants.KEY_TWITCH_TOKEN,
+        constants.KEY_FOLLOWER_LOGIN_ID, constants.KEY_FOLLOWER_ID]).then(storage => {
         // dark mode
-        if (storage[KEY_DARK_MODE]) {
+        if (storage[constants.KEY_DARK_MODE]) {
             document.body.setAttribute('theme', 'dark');
         }
 
         // only if configs are set all, create UI
-        if (storage[KEY_TWITCH_TOKEN] && storage[KEY_FOLLOWER_LOGIN_ID] && storage[KEY_FOLLOWER_ID]) {
+        if (storage[constants.KEY_TWITCH_TOKEN] && storage[constants.KEY_FOLLOWER_LOGIN_ID] && storage[constants.KEY_FOLLOWER_ID]) {
             // group by game name
             let gameGroup = {};
-            for (let s of storage[KEY_LIVE_STREAM]) {
+            for (let s of storage[constants.KEY_LIVE_STREAM]) {
                 if (!gameGroup.hasOwnProperty(s.game_name))
                     gameGroup[s.game_name] = [];
                 gameGroup[s.game_name].push(s);
@@ -133,9 +143,9 @@ function calcTimeDiff(prevTs) {
  */
 function updateTs() {
     let updatedAt = document.getElementById('updated-at');
-    storageGetPromise([KEY_UPDATE_TS]
+    storageGetPromise([constants.KEY_UPDATE_TS]
     ).then(storage => {
-        let timeDiff = calcTimeDiff(storage[KEY_UPDATE_TS])
+        let timeDiff = calcTimeDiff(storage[constants.KEY_UPDATE_TS])
         if (timeDiff >= 5) {
             updatedAt.innerText = `🕗Updated ${timeDiff}min ago`;
         }
@@ -143,7 +153,7 @@ function updateTs() {
 }
 
 function eventHandler(data) {
-    if (data.name === EVENT_REFRESHED) {
+    if (data.name === constants.EVENT_REFRESHED) {
         updateTs();
     }
 }

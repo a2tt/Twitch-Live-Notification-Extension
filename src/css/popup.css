@@ -71,6 +71,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 #refresh-btn {
+    color: var(--text-color);
     cursor: pointer;
     display: inline-block;
     padding: 2px;
@@ -79,6 +80,10 @@ body::-webkit-scrollbar-thumb {
 
 #refresh-btn.spinning {
     animation: spin 500ms infinite linear;
+}
+
+#refresh-btn * {
+    pointer-events: none;
 }
 
 
