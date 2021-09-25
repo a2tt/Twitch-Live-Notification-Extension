@@ -21,8 +21,8 @@ export function request(url, qs = '', twitchToken = '', method = 'GET') {
     }).then(res => {
         if (res.status === 401) {
             storageClearCredential();
-            chrome.browserAction.setBadgeBackgroundColor({color: [255, 0, 0, 255]});
-            chrome.browserAction.setBadgeText({"text": '!'});
+            chrome.action.setBadgeBackgroundColor({color: [255, 0, 0, 255]});
+            chrome.action.setBadgeText({"text": '!'});
         }
         return res.json();
     }).catch(e => {

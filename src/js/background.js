@@ -1,6 +1,6 @@
 import {storageGetPromise, storageSetPromise} from "./storage";
-import * as constants from './constants';
 import {getActiveStream, getFollower, getGameName, getMyInfo, getUserInfos} from "./twitch";
+import * as constants from './constants';
 
 /**
  * Periodically check streams
@@ -57,8 +57,8 @@ function updateLiveStream() {
                 })
             })
         } else {
-            chrome.browserAction.setBadgeBackgroundColor({color: [255, 0, 0, 255]});
-            chrome.browserAction.setBadgeText({"text": '!'});
+            chrome.action.setBadgeBackgroundColor({color: [255, 0, 0, 255]});
+            chrome.action.setBadgeText({"text": '!'});
         }
     })
 }
@@ -88,8 +88,8 @@ function _setLiveStream(liveStreams) {
             [constants.KEY_LIVE_STREAM]: liveStreams,
             [constants.KEY_UPDATE_TS]: new Date().toISOString(),
         }).then(_ => {
-            chrome.browserAction.setBadgeBackgroundColor({color: [141, 75, 255, 255]});
-            chrome.browserAction.setBadgeText({"text": String(liveStreams.length)});
+            chrome.action.setBadgeBackgroundColor({color: [141, 75, 255, 255]});
+            chrome.action.setBadgeText({"text": String(liveStreams.length)});
             chrome.runtime.sendMessage({'name': constants.EVENT_REFRESHED});
         })
     })
@@ -189,31 +189,23 @@ function eventHandler(message, sender, sendResponse) {
     return true;
 }
 
-/**
- * Set storage on install or on update
- */
-function onInstall() {
-    chrome.runtime.onInstalled.addListener(details => {
-        if (details.reason === "install") {
-            storageGetPromise([constants.KEY_LIVE_STREAM, constants.KEY_NOTIFICATION]).then(storage => {
-                let defaultStorage = {}
-                if (!storage[constants.KEY_LIVE_STREAM]) defaultStorage[constants.KEY_LIVE_STREAM] = [];
-                if (!storage[constants.KEY_NOTIFICATION]) defaultStorage[constants.KEY_NOTIFICATION] = false;
+chrome.runtime.onInstalled.addListener(details => {
+    if (details.reason === "install") {
+        storageGetPromise([constants.KEY_LIVE_STREAM, constants.KEY_NOTIFICATION]).then(storage => {
+            let defaultStorage = {}
+            if (!storage[constants.KEY_LIVE_STREAM]) defaultStorage[constants.KEY_LIVE_STREAM] = [];
+            if (!storage[constants.KEY_NOTIFICATION]) defaultStorage[constants.KEY_NOTIFICATION] = false;
 
-                storageSetPromise(defaultStorage);
-            })
-        }
-    })
-}
-
-window.onload = function () {
-    onInstall();
+            storageSetPromise(defaultStorage);
+        })
+    }
 
     chrome.alarms.create(constants.EVENT_UPDATE_LIVE_STREAM, {
         when: 1000, // Initial execution after 1 second
         periodInMinutes: constants.REFRESH_INTERVAL_MIN, // every n minutes
     })
+})
 
-    chrome.alarms.onAlarm.addListener(eventHandler);
-    chrome.runtime.onMessage.addListener(eventHandler);
-}
+
+chrome.alarms.onAlarm.addListener(eventHandler);
+chrome.runtime.onMessage.addListener(eventHandler);

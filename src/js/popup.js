@@ -58,7 +58,7 @@ function loginRequired() {
             let container = document.getElementById('container');
             let loginRequiredElem = document.createElement('div')
             loginRequiredElem.className = 'login-required';
-            loginRequiredElem.innerHTML = `Twitch login required. <a href="${chrome.extension.getURL('options.html')}" target="_blank">option</a>`;
+            loginRequiredElem.innerHTML = `Twitch login required. <a href="${chrome.runtime.getURL('options.html')}" target="_blank">option</a>`;
             container.appendChild(loginRequiredElem);
         }
     })
