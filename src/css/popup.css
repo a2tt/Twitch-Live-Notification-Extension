@@ -70,12 +70,16 @@ body::-webkit-scrollbar-thumb {
     text-align: right;
 }
 
-#refresh-btn {
+#header .btn {
     color: var(--text-color);
     cursor: pointer;
     display: inline-block;
     padding: 2px;
     vertical-align: middle;
+}
+
+#options-btn {
+    float: left;
 }
 
 #refresh-btn.spinning {
@@ -85,7 +89,6 @@ body::-webkit-scrollbar-thumb {
 #refresh-btn * {
     pointer-events: none;
 }
-
 
 #container {
     user-select: none;
@@ -131,15 +134,15 @@ div.stream-wrapper:hover {
     text-align: right;
 }
 
-.login-required {
+.text-alert {
     display: block;
     margin: 20px;
     text-align: center;
 }
 
-.login-required a {
+.text-alert a {
     background-color: #acacac;
-    padding: 0 3px;
+    padding: 0 5px;
     border-radius: 6px;
     color: #fff;
 }

@@ -1,7 +1,7 @@
 {
   "name": "Twitch-Live-Notification",
   "version": "1.0.0",
-  "description": "Get notified of new twitch live broadcast you're following",
+  "description": "Get notified of live broadcast you're following on Twitch",
   "scripts": {
     "build-production": "NODE_ENV=production yarn run build",
     "build": "node utils/build.js",

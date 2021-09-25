@@ -57,7 +57,7 @@ function loginRequired() {
         if (!status) {
             let container = document.getElementById('container');
             let loginRequiredElem = document.createElement('div')
-            loginRequiredElem.className = 'login-required';
+            loginRequiredElem.className = 'text-alert';
             loginRequiredElem.innerHTML = `Twitch login required. <a href="${chrome.runtime.getURL('options.html')}" target="_blank">option</a>`;
             container.appendChild(loginRequiredElem);
         }
@@ -77,14 +77,19 @@ function createUI() {
     */
     let container = document.getElementById('container');
     container.innerHTML = '';
-    storageGetPromise([constants.KEY_DARK_MODE, constants.KEY_LIVE_STREAM, constants.KEY_TWITCH_TOKEN,
-        constants.KEY_FOLLOWER_LOGIN_ID, constants.KEY_FOLLOWER_ID]).then(storage => {
+    storageGetPromise([
+        constants.KEY_DARK_MODE,
+        constants.KEY_LIVE_STREAM,
+        constants.KEY_TWITCH_TOKEN,
+        constants.KEY_FOLLOWER_LOGIN_ID,
+        constants.KEY_FOLLOWER_ID]
+    ).then(storage => {
         // dark mode
         if (storage[constants.KEY_DARK_MODE]) {
             document.body.setAttribute('theme', 'dark');
         }
 
-        // only if configs are set all, create UI
+        // only if all configs are set, create UI
         if (storage[constants.KEY_TWITCH_TOKEN] && storage[constants.KEY_FOLLOWER_LOGIN_ID] && storage[constants.KEY_FOLLOWER_ID]) {
             // group by game name
             let gameGroup = {};
@@ -120,6 +125,16 @@ function createUI() {
                 }
                 container.appendChild(gameGroupElem);
             }
+
+            // if nothing
+            if (Object.keys(gameGroup).length === 0) {
+                let loginRequiredElem = document.createElement('div')
+                loginRequiredElem.className = 'text-alert';
+                loginRequiredElem.innerHTML = `No one is streaming right now :(
+<br><br>Browse other channels on <a href="https://twitch.tv" target="_blank">Twitch</a>`;
+                container.appendChild(loginRequiredElem);
+            }
+
             // refresh updated at
             updateTs();
         }
@@ -142,11 +157,11 @@ function calcTimeDiff(prevTs) {
  * update latest refreshed time
  */
 function updateTs() {
-    let updatedAt = document.getElementById('updated-at');
     storageGetPromise([constants.KEY_UPDATE_TS]
     ).then(storage => {
         let timeDiff = calcTimeDiff(storage[constants.KEY_UPDATE_TS])
         if (timeDiff >= 5) {
+            let updatedAt = document.getElementById('updated-at');
             updatedAt.innerText = `🕗Updated ${timeDiff}min ago`;
         }
     })
@@ -161,6 +176,11 @@ function eventHandler(data) {
 window.onload = function () {
     loginRequired();
     createUI();
+
+    let optionsBtn = document.getElementById('options-btn');
+    optionsBtn.addEventListener('click', _ => {
+        chrome.runtime.openOptionsPage();
+    })
 
     let refreshBtn = document.getElementById('refresh-btn');
     refreshBtn.addEventListener('click', onClickRefreshBtn);
