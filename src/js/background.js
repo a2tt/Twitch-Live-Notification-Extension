@@ -1,5 +1,5 @@
-import {storageGetPromise, storageSetPromise} from "./storage";
-import {getActiveStream, getFollower, getGameName, getMyInfo, getUserInfos} from "./twitch";
+import { storageGetPromise, storageSetPromise } from "./storage";
+import { getActiveStream, getFollowingChannels, getGameName, getMyInfo, getUserInfos } from "./twitch";
 import * as constants from './constants';
 
 /**
@@ -9,13 +9,13 @@ function updateLiveStream() {
     storageGetPromise([constants.KEY_FOLLOWER_ID, constants.KEY_TWITCH_TOKEN]).then(storage => {
         if (storage[constants.KEY_TWITCH_TOKEN] && storage[constants.KEY_FOLLOWER_ID]) {
             // get following list
-            getFollower(storage[constants.KEY_FOLLOWER_ID], storage[constants.KEY_TWITCH_TOKEN]
+            getFollowingChannels(storage[constants.KEY_FOLLOWER_ID], storage[constants.KEY_TWITCH_TOKEN]
             ).then(followingUsers => {
                 // if following no one, return
                 if (!followingUsers.length)
                     return _setLiveStream([]);
                 let userIds = [];
-                followingUsers.forEach(info => userIds.push(info.to_id));
+                followingUsers.forEach(info => userIds.push(info.broadcaster_id));
 
                 // convert followee id to login_id
                 getUserInfos(userIds, 'id').then(userInfos => {
@@ -177,8 +177,12 @@ function eventHandler(message, sender, sendResponse) {
     if (message.name === constants.EVENT_UPDATE_LIVE_STREAM) {
         updateLiveStream();
     } else if (message.name === constants.EVENT_LOGIN) {
-        let redirectUri = encodeURI(`https://${constants.EXTENSION_ID}.chromiumapp.org`);
-        let twitchOauthUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${constants.TWITCH_CLIENT_ID}&redirect_uri=${redirectUri}&scope=openid+user:read:email`
+        const scopes = ["openid", "user:read:email", "user:read:follows"];
+        const scopeString = scopes.join('+').replace(":", "%3A");
+
+        const redirectUri = encodeURI(`https://${constants.EXTENSION_ID}.chromiumapp.org`);
+        const twitchOauthUrl = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${constants.TWITCH_CLIENT_ID}&redirect_uri=${redirectUri}&scope=${scopeString}`
+
         chrome.identity.launchWebAuthFlow({
             url: twitchOauthUrl,
             interactive: true

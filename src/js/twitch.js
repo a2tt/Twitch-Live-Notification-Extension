@@ -72,33 +72,35 @@ export function getMyInfo() {
 }
 
 /**
- * Get following user ids
- *
- * @param followerId
- * @param twitchToken
- * @param cursor
- * @param data: concatenated response
- * @returns {Promise<Array>}
+ * Get following channels of ``followerId``.
+ * 
+ * @param {String} followerId
+ * @param {String} twitchToken
+ * @param {String} cursor
+ * @param {Array} data
  */
-export function getFollower(followerId, twitchToken, cursor = null, data = []) {
+export function getFollowingChannels(followerId, twitchToken, cursor = null, data = []) {
     /*
     {
-     data: [{from_id: <String>, from_name: <String>, to_id: <String>, to_name: <String>, followed_at: <String>}, <String>],
-     pagination: {cursor: <String>},
-     total: <Number>
+        data: {
+            broadcaster_id: <string>,
+            broadcaster_login: <string>,
+            broadcaster_name: <string>,
+            followed_at: <string>
+        }
     }
-     */
-    let url = 'https://api.twitch.tv/helix/users/follows'
-    let qs = new URLSearchParams({
-        from_id: followerId,
-        first: '100',
+    */
+    const url = 'https://api.twitch.tv/helix/channels/followed'
+    const qs = new URLSearchParams({
+        user_id: followerId,
+        first: 100,
     })
     cursor && qs.set('after', cursor) // pagination cursor
 
     return request(url, qs, twitchToken).then(res => {
         data = data.concat(res.data)
         if (String(res.data.length) === qs.get('first') && res.pagination.hasOwnProperty('cursor')) {
-            return getFollower(followerId, twitchToken, res.pagination.cursor, data)
+            return getFollowingChannels(followerId, twitchToken, res.pagination.cursor, data)
         } else {
             return data;
         }
