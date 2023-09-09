@@ -1,4 +1,4 @@
-import {storageClearCredential, storageGetPromise} from "./storage";
+import { storageClearCredential, storageGetPromise } from "./storage";
 import * as constants from "./constants";
 
 /**
@@ -21,8 +21,8 @@ export function request(url, qs = '', twitchToken = '', method = 'GET') {
     }).then(res => {
         if (res.status === 401) {
             storageClearCredential();
-            chrome.action.setBadgeBackgroundColor({color: [255, 0, 0, 255]});
-            chrome.action.setBadgeText({"text": '!'});
+            chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
+            chrome.action.setBadgeText({ "text": '!' });
         }
         return res.json();
     }).catch(e => {
@@ -56,7 +56,7 @@ export function getUserInfos(userIds = null, by = 'login') {
         let requests = []
         qss.forEach(qs => requests.push(request(url, qs, storage[constants.KEY_TWITCH_TOKEN])))
         return Promise.all(requests).then(values => {
-            let res = {'data': []}
+            let res = { 'data': [] }
             values.forEach(r => res.data = res.data.concat(r.data));
             return res.data
         });
@@ -128,7 +128,7 @@ export function getActiveStream(userIds, twitchToken, cursor = null, data = []) 
     let requests = []
     qss.forEach(qs => requests.push(request(url, qs, twitchToken)))
     return Promise.all(requests).then(values => {
-        let res = {'data': []};
+        let res = { 'data': [] };
         values.forEach(r => res.data = res.data.concat(r.data));
         return res.data;
     });

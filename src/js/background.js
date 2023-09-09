@@ -57,8 +57,8 @@ function updateLiveStream() {
                 })
             })
         } else {
-            chrome.action.setBadgeBackgroundColor({color: [255, 0, 0, 255]});
-            chrome.action.setBadgeText({"text": '!'});
+            chrome.action.setBadgeBackgroundColor({ color: [255, 0, 0, 255] });
+            chrome.action.setBadgeText({ "text": '!' });
         }
     })
 }
@@ -88,9 +88,9 @@ function _setLiveStream(liveStreams) {
             [constants.KEY_LIVE_STREAM]: liveStreams,
             [constants.KEY_UPDATE_TS]: new Date().toISOString(),
         }).then(_ => {
-            chrome.action.setBadgeBackgroundColor({color: [141, 75, 255, 255]});
-            chrome.action.setBadgeText({"text": String(liveStreams.length)});
-            chrome.runtime.sendMessage({'name': constants.EVENT_REFRESHED});
+            chrome.action.setBadgeBackgroundColor({ color: [141, 75, 255, 255] });
+            chrome.action.setBadgeText({ "text": String(liveStreams.length) });
+            chrome.runtime.sendMessage({ 'name': constants.EVENT_REFRESHED });
         })
     })
 }
@@ -143,7 +143,7 @@ async function twitchLoginHandler(redirectUri, sendResponse) {
         let access_token = params.get('access_token')
         if (access_token) {
             // save access token
-            await storageSetPromise({[constants.KEY_TWITCH_TOKEN]: access_token})
+            await storageSetPromise({ [constants.KEY_TWITCH_TOKEN]: access_token })
 
             // get follower config
             let storage = await storageGetPromise([constants.KEY_FOLLOWER_ID, constants.KEY_FOLLOWER_LOGIN_ID])
@@ -158,11 +158,11 @@ async function twitchLoginHandler(redirectUri, sendResponse) {
                     [constants.KEY_FOLLOWER_LOGIN_ID]: userInfos[0].login,
                 })
             }
-            chrome.runtime.sendMessage({'name': constants.EVENT_UPDATE_LIVE_STREAM});
-            sendResponse({message: 'success'})
+            chrome.runtime.sendMessage({ 'name': constants.EVENT_UPDATE_LIVE_STREAM });
+            sendResponse({ message: 'success' })
         }
     } else {
-        sendResponse({message: 'fail'})
+        sendResponse({ message: 'fail' })
     }
 }
 
